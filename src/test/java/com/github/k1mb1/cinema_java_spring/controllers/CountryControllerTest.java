@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.k1mb1.cinema_java_spring.config.Error;
 import com.github.k1mb1.cinema_java_spring.dtos.country.CountryRequestDto;
 import com.github.k1mb1.cinema_java_spring.dtos.country.CountryResponseDto;
-import com.github.k1mb1.cinema_java_spring.repositories.CountryRepository;
 import com.github.k1mb1.cinema_java_spring.utils.IntegrationTest;
 import com.github.k1mb1.cinema_java_spring.utils.IntegrationTestUtils;
 import lombok.val;
@@ -29,8 +28,6 @@ public class CountryControllerTest {
     ObjectMapper objectMapper;
     @Autowired
     IntegrationTestUtils utils;
-    @Autowired
-    CountryRepository countryRepository;
 
     @Test
     public void testCreateCountry() throws Exception {
