@@ -1,0 +1,65 @@
+package com.github.k1mb1.cinema_java_spring.services;
+
+import com.github.k1mb1.cinema_java_spring.config.NotFoundException;
+import com.github.k1mb1.cinema_java_spring.dtos.user.UserRequestDto;
+import com.github.k1mb1.cinema_java_spring.dtos.user.UserResponseDto;
+import com.github.k1mb1.cinema_java_spring.mappers.UserMapper;
+import com.github.k1mb1.cinema_java_spring.repositories.UserRepository;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.val;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+@FieldDefaults(makeFinal = true)
+public class UserService {
+
+    UserRepository userRepository;
+    UserMapper userMapper;
+
+    public UserResponseDto createUser(@NonNull UserRequestDto userRequestDto) {
+        return userMapper.toDto(
+                userRepository.save(userMapper.toEntity(userRequestDto))
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public UserResponseDto getUserById(@NonNull Integer id) {
+        return userMapper.toDto(
+                userRepository.findById(id)
+                        .orElseThrow(() -> new NotFoundException("User not found with ID: " + id))
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserResponseDto> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(userMapper::toDto)
+                .toList();
+    }
+
+    public UserResponseDto updateUser(@NonNull Integer id, @NonNull UserRequestDto userRequestDto) {
+        val existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("User not found with ID: " + id));
+
+        val updatedUser = userMapper.toEntity(userRequestDto)
+                .setId(existingUser.getId())
+                .setCreateAt(existingUser.getCreateAt())
+                .setWatchedMovies(existingUser.getWatchedMovies());
+
+        return userMapper.toDto(userRepository.save(updatedUser));
+    }
+
+    public void deleteUser(@NonNull Integer id) {
+        if (!userRepository.existsById(id)) {
+            throw new NotFoundException("User not found with ID: " + id);
+        }
+        userRepository.deleteById(id);
+    }
+}

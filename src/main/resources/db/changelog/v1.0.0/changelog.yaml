@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/v1.0.0/00001_create_users.sql
+  - include:
+      file: db/changelog/v1.0.0/00002_create_movies.sql
+  - include:
+      file: db/changelog/v1.0.0/00003_create_watched_movies.sql
+  - include:
+      file: db/changelog/v1.0.0/00004_alter_movies_add_release_and_timestamps.sql
+  - include:
+      file: db/changelog/v1.0.0/00005_alter_users_add_updated_at.sql
+  - include:
+      file: db/changelog/v1.0.0/00006_alter_watched_movies_add_updated_at.sql
+  - include:
+      file: db/changelog/v1.0.0/00007_create_genres_and_movie_genres.sql
+  - include:
+      file: db/changelog/v1.0.0/00008_alter_movies_add_money_age_duration.sql
+  - include:
+      file: db/changelog/v1.0.0/00009_create_countries_and_movie_countries.sql
+  - include:
+      file: db/changelog/v1.0.0/00010_alter_watched_movies_add_id.sql
