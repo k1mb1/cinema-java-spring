@@ -1,0 +1,29 @@
+# Исключаем ненужные файлы и папки из Docker контекста
+target/
+.git/
+.gitignore
+.idea/
+*.iml
+*.md
+README.md
+HELP.md
+
+# Исключаем файлы разработки
+.vscode/
+.settings/
+.project
+.classpath
+
+# Исключаем временные файлы
+*.tmp
+*.temp
+*.log
+
+# Исключаем тестовые файлы (можно закомментировать если нужны тесты в образе)
+src/test/
+
+# Исключаем Docker файлы
+Dockerfile
+docker-compose.yml
+docker-compose-local.yml.
+.dockerignore
