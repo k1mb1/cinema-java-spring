@@ -1,6 +1,6 @@
 package com.github.k1mb1.cinema_java_spring.services;
 
-import com.github.k1mb1.cinema_java_spring.config.NotFoundException;
+import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
 import com.github.k1mb1.cinema_java_spring.dtos.genre.GenreRequestDto;
 import com.github.k1mb1.cinema_java_spring.dtos.genre.GenreResponseDto;
 import com.github.k1mb1.cinema_java_spring.entities.Genre;
@@ -15,7 +15,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,24 +39,25 @@ class GenreServiceTest {
     GenreRequestDto genreRequestDto;
     GenreResponseDto genreResponseDto;
 
+    static final int VALID_ID = 1;
+    static final int INVALID_ID = 99;
+
     @BeforeEach
     void setUp() {
-        // Setup test data
         genreRequestDto = GenreRequestDto.builder()
                 .name("Action")
                 .build();
 
         genre = Genre.builder()
-                .id(1)
-                .name("Action")
+                .id(VALID_ID)
+                .name(genreRequestDto.getName())
                 .createAt(LocalDateTime.now())
                 .updateAt(LocalDateTime.now())
-                .movies(new HashSet<>())
                 .build();
 
         genreResponseDto = GenreResponseDto.builder()
-                .id(1)
-                .name("Action")
+                .id(genre.getId())
+                .name(genre.getName())
                 .createAt(genre.getCreateAt())
                 .updateAt(genre.getUpdateAt())
                 .build();
@@ -65,134 +65,120 @@ class GenreServiceTest {
 
     @Test
     void createGenre_ShouldReturnGenreResponseDto() {
-        // Arrange
         when(genreMapper.toEntity(genreRequestDto)).thenReturn(genre);
         when(genreRepository.save(genre)).thenReturn(genre);
         when(genreMapper.toDto(genre)).thenReturn(genreResponseDto);
 
-        // Act
         val result = genreService.createGenre(genreRequestDto);
 
-        // Assert
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(genreResponseDto.getId());
         assertThat(result.getName()).isEqualTo(genreResponseDto.getName());
+
         verify(genreRepository).save(genre);
     }
 
     @Test
     void getGenreById_WithValidId_ShouldReturnGenreResponseDto() {
-        // Arrange
-        when(genreRepository.findById(1)).thenReturn(Optional.of(genre));
+        when(genreRepository.findById(VALID_ID)).thenReturn(Optional.of(genre));
         when(genreMapper.toDto(genre)).thenReturn(genreResponseDto);
 
-        // Act
-        val result = genreService.getGenreById(1);
+        val result = genreService.getGenreById(VALID_ID);
 
-        // Assert
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(genreResponseDto.getId());
         assertThat(result.getName()).isEqualTo(genreResponseDto.getName());
-        verify(genreRepository).findById(1);
+
+        verify(genreRepository).findById(VALID_ID);
     }
 
     @Test
     void getGenreById_WithInvalidId_ShouldThrowEntityNotFoundException() {
-        // Arrange
-        when(genreRepository.findById(99)).thenReturn(Optional.empty());
+        when(genreRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
-        // Act & Assert
-        assertThatThrownBy(() -> genreService.getGenreById(99))
+        assertThatThrownBy(() -> genreService.getGenreById(INVALID_ID))
                 .isExactlyInstanceOf(NotFoundException.class);
-        verify(genreRepository).findById(99);
+
+        verify(genreRepository).findById(INVALID_ID);
     }
 
     @Test
     void getAllGenres_ShouldReturnListOfGenreResponseDto() {
-        // Arrange
         when(genreRepository.findAll()).thenReturn(List.of(genre));
         when(genreMapper.toDto(genre)).thenReturn(genreResponseDto);
 
-        // Act
         val result = genreService.getAllGenres();
 
-        // Assert
         assertThat(result).isNotNull();
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().getId()).isEqualTo(genreResponseDto.getId());
+
         verify(genreRepository).findAll();
     }
 
     @Test
     void updateGenre_WithValidId_ShouldReturnUpdatedGenreResponseDto() {
-        // Arrange
         val updateRequestDto = GenreRequestDto.builder()
                 .name("Updated Genre")
                 .build();
 
         val updatedGenre = Genre.builder()
-                .id(1)
-                .name("Updated Genre")
+                .id(genre.getId())
+                .name(updateRequestDto.getName())
                 .createAt(genre.getCreateAt())
                 .updateAt(LocalDateTime.now())
-                .movies(genre.getMovies())
                 .build();
 
         val updatedResponseDto = GenreResponseDto.builder()
-                .id(1)
-                .name("Updated Genre")
+                .id(updatedGenre.getId())
+                .name(updatedGenre.getName())
                 .createAt(updatedGenre.getCreateAt())
                 .updateAt(updatedGenre.getUpdateAt())
                 .build();
 
-        when(genreRepository.findById(1)).thenReturn(Optional.of(genre));
+        when(genreRepository.findById(genre.getId())).thenReturn(Optional.of(genre));
         when(genreMapper.toEntity(updateRequestDto)).thenReturn(updatedGenre);
         when(genreRepository.save(any(Genre.class))).thenReturn(updatedGenre);
         when(genreMapper.toDto(updatedGenre)).thenReturn(updatedResponseDto);
 
-        // Act
-        val result = genreService.updateGenre(1, updateRequestDto);
+        val result = genreService.updateGenre(genre.getId(), updateRequestDto);
 
-        // Assert
         assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(updatedResponseDto.getId());
-        assertThat(result.getName()).isEqualTo("Updated Genre");
+        assertThat(result.getId()).isEqualTo(genre.getId());
+        assertThat(result.getName()).isEqualTo(updateRequestDto.getName());
+
         verify(genreRepository).save(any(Genre.class));
     }
 
     @Test
     void updateGenre_WithInvalidId_ShouldThrowEntityNotFoundException() {
-        // Arrange
-        when(genreRepository.findById(99)).thenReturn(Optional.empty());
+        when(genreRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
-        // Act & Assert
-        assertThatThrownBy(() -> genreService.updateGenre(99, genreRequestDto))
+        assertThatThrownBy(() -> genreService.updateGenre(INVALID_ID, genreRequestDto))
                 .isExactlyInstanceOf(NotFoundException.class);
-        verify(genreRepository).findById(99);
+
+        verify(genreRepository).findById(INVALID_ID);
         verify(genreRepository, never()).save(any(Genre.class));
     }
 
     @Test
     void deleteGenre_WithValidId_ShouldDeleteGenre() {
-        // Arrange
-        when(genreRepository.existsById(1)).thenReturn(true);
-        doNothing().when(genreRepository).deleteById(1);
+        when(genreRepository.existsById(VALID_ID)).thenReturn(true);
+        doNothing().when(genreRepository).deleteById(VALID_ID);
 
-        // Act
-        genreService.deleteGenre(1);
+        genreService.deleteGenre(VALID_ID);
 
-        // Assert
-        verify(genreRepository).deleteById(1);
+        verify(genreRepository).deleteById(VALID_ID);
     }
 
     @Test
     void deleteGenre_WithInvalidId_ShouldThrowEntityNotFoundException() {
-        // Arrange
-        when(genreRepository.existsById(99)).thenReturn(false);
+        when(genreRepository.existsById(INVALID_ID)).thenReturn(false);
 
         // Act & Assert
-        assertThatThrownBy(() -> genreService.deleteGenre(99))
+        assertThatThrownBy(() -> genreService.deleteGenre(INVALID_ID))
                 .isExactlyInstanceOf(NotFoundException.class);
-        verify(genreRepository, never()).deleteById(99);
+
+        verify(genreRepository, never()).deleteById(INVALID_ID);
     }
 }

@@ -1,6 +1,6 @@
 package com.github.k1mb1.cinema_java_spring.services;
 
-import com.github.k1mb1.cinema_java_spring.config.NotFoundException;
+import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
 import com.github.k1mb1.cinema_java_spring.dtos.genre.GenreRequestDto;
 import com.github.k1mb1.cinema_java_spring.dtos.genre.GenreResponseDto;
 import com.github.k1mb1.cinema_java_spring.mappers.GenreMapper;
@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+
+import static com.github.k1mb1.cinema_java_spring.errors.ErrorMessages.GENRE_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +35,7 @@ public class GenreService {
     public GenreResponseDto getGenreById(@NonNull Integer id) {
         return genreMapper.toDto(
                 genreRepository.findById(id)
-                        .orElseThrow(() -> new NotFoundException("Genre not found with ID: " + id)));
+                        .orElseThrow(() -> new NotFoundException(GENRE_NOT_FOUND.formatted(id))));
     }
 
     @Transactional(readOnly = true)
@@ -45,7 +47,7 @@ public class GenreService {
 
     public GenreResponseDto updateGenre(@NonNull Integer id, @NonNull GenreRequestDto genreRequestDto) {
         val existingGenre = genreRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Genre not found with ID: " + id));
+                .orElseThrow(() -> new NotFoundException(GENRE_NOT_FOUND.formatted(id)));
 
         val updatedGenre = genreMapper.toEntity(genreRequestDto)
                 .setId(existingGenre.getId())
@@ -57,7 +59,7 @@ public class GenreService {
 
     public void deleteGenre(@NonNull Integer id) {
         if (!genreRepository.existsById(id)) {
-            throw new NotFoundException("Genre not found with ID: " + id);
+            throw new NotFoundException(GENRE_NOT_FOUND.formatted(id));
         }
         genreRepository.deleteById(id);
     }

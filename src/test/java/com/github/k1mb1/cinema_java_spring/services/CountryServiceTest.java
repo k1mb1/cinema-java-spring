@@ -1,9 +1,9 @@
 package com.github.k1mb1.cinema_java_spring.services;
 
-import com.github.k1mb1.cinema_java_spring.config.NotFoundException;
 import com.github.k1mb1.cinema_java_spring.dtos.country.CountryRequestDto;
 import com.github.k1mb1.cinema_java_spring.dtos.country.CountryResponseDto;
 import com.github.k1mb1.cinema_java_spring.entities.Country;
+import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
 import com.github.k1mb1.cinema_java_spring.mappers.CountryMapper;
 import com.github.k1mb1.cinema_java_spring.repositories.CountryRepository;
 import lombok.val;
@@ -15,7 +15,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,24 +39,25 @@ class CountryServiceTest {
     CountryRequestDto countryRequestDto;
     CountryResponseDto countryResponseDto;
 
+    static final int VALID_ID = 1;
+    static final int INVALID_ID = 99;
+
     @BeforeEach
     void setUp() {
-        // Setup test data
         countryRequestDto = CountryRequestDto.builder()
                 .name("USA")
                 .build();
 
         country = Country.builder()
-                .id(1)
-                .name("USA")
+                .id(VALID_ID)
+                .name(countryRequestDto.getName())
                 .createAt(LocalDateTime.now())
                 .updateAt(LocalDateTime.now())
-                .movies(new HashSet<>())
                 .build();
 
         countryResponseDto = CountryResponseDto.builder()
-                .id(1)
-                .name("USA")
+                .id(country.getId())
+                .name(country.getName())
                 .createAt(country.getCreateAt())
                 .updateAt(country.getUpdateAt())
                 .build();
@@ -65,134 +65,119 @@ class CountryServiceTest {
 
     @Test
     void createCountry_ShouldReturnCountryResponseDto() {
-        // Arrange
         when(countryMapper.toEntity(countryRequestDto)).thenReturn(country);
         when(countryRepository.save(country)).thenReturn(country);
         when(countryMapper.toDto(country)).thenReturn(countryResponseDto);
 
-        // Act
         val result = countryService.createCountry(countryRequestDto);
 
-        // Assert
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(countryResponseDto.getId());
         assertThat(result.getName()).isEqualTo(countryResponseDto.getName());
+
         verify(countryRepository).save(country);
     }
 
     @Test
     void getCountryById_WithValidId_ShouldReturnCountryResponseDto() {
-        // Arrange
-        when(countryRepository.findById(1)).thenReturn(Optional.of(country));
+        when(countryRepository.findById(VALID_ID)).thenReturn(Optional.of(country));
         when(countryMapper.toDto(country)).thenReturn(countryResponseDto);
 
-        // Act
-        val result = countryService.getCountryById(1);
+        val result = countryService.getCountryById(VALID_ID);
 
-        // Assert
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(countryResponseDto.getId());
         assertThat(result.getName()).isEqualTo(countryResponseDto.getName());
-        verify(countryRepository).findById(1);
+
+        verify(countryRepository).findById(VALID_ID);
     }
 
     @Test
     void getCountryById_WithInvalidId_ShouldThrowEntityNotFoundException() {
-        // Arrange
-        when(countryRepository.findById(99)).thenReturn(Optional.empty());
+        when(countryRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
-        // Act & Assert
-        assertThatThrownBy(() -> countryService.getCountryById(99))
+        assertThatThrownBy(() -> countryService.getCountryById(INVALID_ID))
                 .isExactlyInstanceOf(NotFoundException.class);
-        verify(countryRepository).findById(99);
+
+        verify(countryRepository).findById(INVALID_ID);
     }
 
     @Test
     void getAllCountries_ShouldReturnListOfCountryResponseDto() {
-        // Arrange
         when(countryRepository.findAll()).thenReturn(List.of(country));
         when(countryMapper.toDto(country)).thenReturn(countryResponseDto);
 
-        // Act
         val result = countryService.getAllCountries();
 
-        // Assert
         assertThat(result).isNotNull();
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().getId()).isEqualTo(countryResponseDto.getId());
+
         verify(countryRepository).findAll();
     }
 
     @Test
     void updateCountry_WithValidId_ShouldReturnUpdatedCountryResponseDto() {
-        // Arrange
         val updateRequestDto = CountryRequestDto.builder()
                 .name("Updated Country")
                 .build();
 
         val updatedCountry = Country.builder()
-                .id(1)
-                .name("Updated Country")
+                .id(country.getId())
+                .name(countryRequestDto.getName())
                 .createAt(country.getCreateAt())
                 .updateAt(LocalDateTime.now())
-                .movies(country.getMovies())
                 .build();
 
         val updatedResponseDto = CountryResponseDto.builder()
-                .id(1)
-                .name("Updated Country")
+                .id(updatedCountry.getId())
+                .name(updatedCountry.getName())
                 .createAt(updatedCountry.getCreateAt())
                 .updateAt(updatedCountry.getUpdateAt())
                 .build();
 
-        when(countryRepository.findById(1)).thenReturn(Optional.of(country));
+        when(countryRepository.findById(country.getId())).thenReturn(Optional.of(country));
         when(countryMapper.toEntity(updateRequestDto)).thenReturn(updatedCountry);
         when(countryRepository.save(any(Country.class))).thenReturn(updatedCountry);
         when(countryMapper.toDto(updatedCountry)).thenReturn(updatedResponseDto);
 
-        // Act
-        val result = countryService.updateCountry(1, updateRequestDto);
+        val result = countryService.updateCountry(country.getId(), updateRequestDto);
 
-        // Assert
         assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(updatedResponseDto.getId());
-        assertThat(result.getName()).isEqualTo("Updated Country");
+        assertThat(result.getId()).isEqualTo(country.getId());
+        assertThat(result.getName()).isEqualTo(updatedCountry.getName());
+
         verify(countryRepository).save(any(Country.class));
     }
 
     @Test
     void updateCountry_WithInvalidId_ShouldThrowEntityNotFoundException() {
-        // Arrange
-        when(countryRepository.findById(99)).thenReturn(Optional.empty());
+        when(countryRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
-        // Act & Assert
-        assertThatThrownBy(() -> countryService.updateCountry(99, countryRequestDto))
+        assertThatThrownBy(() -> countryService.updateCountry(INVALID_ID, countryRequestDto))
                 .isExactlyInstanceOf(NotFoundException.class);
-        verify(countryRepository).findById(99);
+
+        verify(countryRepository).findById(INVALID_ID);
         verify(countryRepository, never()).save(any(Country.class));
     }
 
     @Test
     void deleteCountry_WithValidId_ShouldDeleteCountry() {
-        // Arrange
-        when(countryRepository.existsById(1)).thenReturn(true);
-        doNothing().when(countryRepository).deleteById(1);
+        when(countryRepository.existsById(VALID_ID)).thenReturn(true);
+        doNothing().when(countryRepository).deleteById(VALID_ID);
 
-        // Act
-        countryService.deleteCountry(1);
+        countryService.deleteCountry(VALID_ID);
 
-        // Assert
-        verify(countryRepository).deleteById(1);
+        verify(countryRepository).deleteById(VALID_ID);
     }
 
     @Test
     void deleteCountry_WithInvalidId_ShouldThrowEntityNotFoundException() {
-        // Arrange
-        when(countryRepository.existsById(99)).thenReturn(false);
+        when(countryRepository.existsById(INVALID_ID)).thenReturn(false);
 
-        // Act & Assert
-        assertThatThrownBy(() -> countryService.deleteCountry(99))
+        assertThatThrownBy(() -> countryService.deleteCountry(INVALID_ID))
                 .isExactlyInstanceOf(NotFoundException.class);
-        verify(countryRepository, never()).deleteById(99);
+
+        verify(countryRepository, never()).deleteById(INVALID_ID);
     }
 }

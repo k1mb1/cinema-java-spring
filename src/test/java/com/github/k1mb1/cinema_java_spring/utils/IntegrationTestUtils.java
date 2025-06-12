@@ -1,20 +1,21 @@
 package com.github.k1mb1.cinema_java_spring.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.k1mb1.cinema_java_spring.config.Error;
+import com.github.k1mb1.cinema_java_spring.errors.Error;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Утилитный класс для интеграционных тестов с использованием MockMvc.
+ * Утилитарный класс для интеграционных тестов с использованием MockMvc.
  */
 @RequiredArgsConstructor
 public class IntegrationTestUtils {
@@ -33,15 +34,19 @@ public class IntegrationTestUtils {
      * @throws Exception если произошла ошибка при выполнении запроса или десериализации
      */
     public <T> T perform(
-            MockHttpServletRequestBuilder request,
-            HttpStatus status,
-            Class<T> clazz
+            @NonNull MockHttpServletRequestBuilder request,
+            @NonNull HttpStatus status,
+            @NonNull Class<T> clazz
     ) throws Exception {
-        MvcResult result = mockMvc.perform(request.contentType(MediaType.APPLICATION_JSON))
+        val result = mockMvc.perform(request.contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is(status.value()))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
-        String content = result.getResponse().getContentAsString();
-        return objectMapper.readValue(content, clazz);
+        val object = objectMapper.readValue(result.getResponse().getContentAsString(), clazz);
+
+        assertThat(object).isNotNull();
+
+        return object;
     }
 
 
@@ -54,20 +59,21 @@ public class IntegrationTestUtils {
      * @throws Exception если произошла ошибка при выполнении запроса или десериализации
      */
     public Error expectError(
-            MockHttpServletRequestBuilder request,
-            HttpStatus expectedStatus
+            @NonNull MockHttpServletRequestBuilder request,
+            @NonNull HttpStatus expectedStatus
     ) throws Exception {
         val result = mockMvc.perform(request.contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is(expectedStatus.value()))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        val content = result.getResponse().getContentAsString();
-        val error = objectMapper.readValue(content, Error.class);
+        val error = objectMapper.readValue(result.getResponse().getContentAsString(), Error.class);
 
         assertThat(error).isNotNull();
         assertThat(error.status()).isEqualTo(expectedStatus);
         assertThat(error.code()).isEqualTo(expectedStatus.value());
         assertThat(error.timestamp()).isNotNull();
+        assertThat(error.message()).isNotNull();
 
         return error;
     }
@@ -80,8 +86,8 @@ public class IntegrationTestUtils {
      * @throws Exception если произошла ошибка при выполнении запроса
      */
     public void perform(
-            MockHttpServletRequestBuilder request,
-            HttpStatus expectedStatus
+            @NonNull MockHttpServletRequestBuilder request,
+            @NonNull HttpStatus expectedStatus
     ) throws Exception {
         mockMvc.perform(request.contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is(expectedStatus.value()));

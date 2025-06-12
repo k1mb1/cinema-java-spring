@@ -1,6 +1,6 @@
 package com.github.k1mb1.cinema_java_spring.services;
 
-import com.github.k1mb1.cinema_java_spring.config.NotFoundException;
+import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
 import com.github.k1mb1.cinema_java_spring.dtos.movie.MovieRequestDto;
 import com.github.k1mb1.cinema_java_spring.dtos.movie.MovieResponseDto;
 import com.github.k1mb1.cinema_java_spring.entities.Country;
@@ -54,18 +54,20 @@ class MovieServiceTest {
     Genre genre;
     Country country;
 
+    static final int VALID_ID = 1;
+    static final int INVALID_ID = 99;
+
     @BeforeEach
     void setUp() {
-        // Setup test data
         genre = Genre.builder()
-                .id(1)
+                .id(VALID_ID)
                 .name("Action")
                 .createAt(LocalDateTime.now())
                 .updateAt(LocalDateTime.now())
                 .build();
 
         country = Country.builder()
-                .id(1)
+                .id(VALID_ID)
                 .name("USA")
                 .createAt(LocalDateTime.now())
                 .updateAt(LocalDateTime.now())
@@ -76,41 +78,40 @@ class MovieServiceTest {
                 .description("Test Description")
                 .year(2023)
                 .releaseDate(LocalDate.of(2023, 1, 1))
-                .ageRating("PG-13")
+                .ageRating("18+")
                 .budget(1000000L)
                 .worldGross(5000000L)
                 .durationMinutes(120)
-                .genreIds(Set.of(1))
-                .countryIds(Set.of(1))
+                .genreIds(Set.of(genre.getId()))
+                .countryIds(Set.of(country.getId()))
                 .build();
 
         movie = Movie.builder()
-                .id(1)
-                .title("Test Movie")
-                .description("Test Description")
-                .year(2023)
-                .releaseDate(LocalDate.of(2023, 1, 1))
-                .ageRating("PG-13")
-                .budget(1000000L)
-                .worldGross(5000000L)
-                .durationMinutes(120)
-                .genres(new HashSet<>(Set.of(genre)))
-                .countries(new HashSet<>(Set.of(country)))
+                .id(VALID_ID)
+                .title(movieRequestDto.getTitle())
+                .description(movieRequestDto.getDescription())
+                .year(movieRequestDto.getYear())
+                .releaseDate(movieRequestDto.getReleaseDate())
+                .ageRating(movieRequestDto.getAgeRating())
+                .budget(movieRequestDto.getBudget())
+                .worldGross(movieRequestDto.getWorldGross())
+                .durationMinutes(movieRequestDto.getDurationMinutes())
+                .genres(Set.of(genre))
+                .countries(Set.of(country))
                 .createAt(LocalDateTime.now())
                 .updateAt(LocalDateTime.now())
-                .watchedMovies(new HashSet<>())
                 .build();
 
         movieResponseDto = MovieResponseDto.builder()
-                .id(1)
-                .title("Test Movie")
-                .description("Test Description")
-                .year(2023)
-                .releaseDate(LocalDate.of(2023, 1, 1))
-                .ageRating("PG-13")
-                .budget(1000000L)
-                .worldGross(5000000L)
-                .durationMinutes(120)
+                .id(movie.getId())
+                .title(movie.getTitle())
+                .description(movie.getDescription())
+                .year(movie.getYear())
+                .releaseDate(movie.getReleaseDate())
+                .ageRating(movie.getAgeRating())
+                .budget(movie.getBudget())
+                .worldGross(movie.getBudget())
+                .durationMinutes(movie.getDurationMinutes())
                 .createAt(movie.getCreateAt())
                 .updateAt(movie.getUpdateAt())
                 .build();
@@ -118,60 +119,52 @@ class MovieServiceTest {
 
     @Test
     void createMovie_ShouldReturnMovieResponseDto() {
-        // Arrange
         when(movieMapper.toEntity(movieRequestDto)).thenReturn(movie);
         when(genreRepository.findAllById(any())).thenReturn(List.of(genre));
         when(countryRepository.findAllById(any())).thenReturn(List.of(country));
         when(movieRepository.save(any(Movie.class))).thenReturn(movie);
         when(movieMapper.toDto(movie)).thenReturn(movieResponseDto);
 
-        // Act
         val result = movieService.createMovie(movieRequestDto);
 
-        // Assert
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(movieResponseDto.getId());
         assertThat(result.getTitle()).isEqualTo(movieResponseDto.getTitle());
+
         verify(movieRepository).save(any(Movie.class));
     }
 
     @Test
     void getMovieById_WithValidId_ShouldReturnMovieResponseDto() {
-        // Arrange
-        when(movieRepository.findById(1)).thenReturn(Optional.of(movie));
+        when(movieRepository.findById(VALID_ID)).thenReturn(Optional.of(movie));
         when(movieMapper.toDto(movie)).thenReturn(movieResponseDto);
 
-        // Act
-        val result = movieService.getMovieById(1);
+        val result = movieService.getMovieById(VALID_ID);
 
-        // Assert
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(movieResponseDto.getId());
         assertThat(result.getTitle()).isEqualTo(movieResponseDto.getTitle());
-        verify(movieRepository).findById(1);
+
+        verify(movieRepository).findById(VALID_ID);
     }
 
     @Test
     void getMovieById_WithInvalidId_ShouldThrowEntityNotFoundException() {
-        // Arrange
-        when(movieRepository.findById(99)).thenReturn(Optional.empty());
+        when(movieRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
-        // Act & Assert
-        assertThatThrownBy(() -> movieService.getMovieById(99))
+        assertThatThrownBy(() -> movieService.getMovieById(INVALID_ID))
                 .isExactlyInstanceOf(NotFoundException.class);
-        verify(movieRepository).findById(99);
+
+        verify(movieRepository).findById(INVALID_ID);
     }
 
     @Test
     void getAllMovies_ShouldReturnListOfMovieResponseDto() {
-        // Arrange
         when(movieRepository.findAll()).thenReturn(List.of(movie));
         when(movieMapper.toDto(movie)).thenReturn(movieResponseDto);
 
-        // Act
         val result = movieService.getAllMovies();
 
-        // Assert
         assertThat(result).isNotNull();
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().getId()).isEqualTo(movieResponseDto.getId());
@@ -180,89 +173,82 @@ class MovieServiceTest {
 
     @Test
     void updateMovie_WithValidId_ShouldReturnUpdatedMovieResponseDto() {
-        // Arrange
         val updateRequestDto = MovieRequestDto.builder()
                 .title("Updated Movie")
                 .description("Updated Description")
                 .year(2024)
                 .releaseDate(LocalDate.of(2024, 1, 1))
-                .genreIds(Set.of(1))
-                .countryIds(Set.of(1))
+                .genreIds(Set.of(VALID_ID))
+                .countryIds(Set.of(VALID_ID))
                 .build();
 
         val updatedMovie = Movie.builder()
-                .id(1)
-                .title("Updated Movie")
-                .description("Updated Description")
-                .year(2024)
-                .releaseDate(LocalDate.of(2024, 1, 1))
-                .genres(new HashSet<>(Set.of(genre)))
-                .countries(new HashSet<>(Set.of(country)))
+                .id(movie.getId())
+                .title(updateRequestDto.getTitle())
+                .description(updateRequestDto.getDescription())
+                .year(updateRequestDto.getYear())
+                .releaseDate(updateRequestDto.getReleaseDate())
+                .genres(Set.of(genre))
+                .countries(Set.of(country))
                 .createAt(movie.getCreateAt())
                 .updateAt(LocalDateTime.now())
                 .watchedMovies(movie.getWatchedMovies())
                 .build();
 
         val updatedResponseDto = MovieResponseDto.builder()
-                .id(1)
-                .title("Updated Movie")
-                .description("Updated Description")
-                .year(2024)
-                .releaseDate(LocalDate.of(2024, 1, 1))
+                .id(updatedMovie.getId())
+                .title(updatedMovie.getTitle())
+                .description(updatedMovie.getDescription())
+                .year(updatedMovie.getYear())
+                .releaseDate(updatedMovie.getReleaseDate())
                 .createAt(updatedMovie.getCreateAt())
                 .updateAt(updatedMovie.getUpdateAt())
                 .build();
 
-        when(movieRepository.findById(1)).thenReturn(Optional.of(movie));
+        when(movieRepository.findById(movie.getId())).thenReturn(Optional.of(movie));
         when(movieMapper.toEntity(updateRequestDto)).thenReturn(updatedMovie);
         when(genreRepository.findAllById(any())).thenReturn(List.of(genre));
         when(countryRepository.findAllById(any())).thenReturn(List.of(country));
         when(movieRepository.save(any(Movie.class))).thenReturn(updatedMovie);
         when(movieMapper.toDto(updatedMovie)).thenReturn(updatedResponseDto);
 
-        // Act
-        val result = movieService.updateMovie(1, updateRequestDto);
+        val result = movieService.updateMovie(movie.getId(), updateRequestDto);
 
-        // Assert
         assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(updatedResponseDto.getId());
-        assertThat(result.getTitle()).isEqualTo("Updated Movie");
+        assertThat(result.getId()).isEqualTo(movie.getId());
+        assertThat(result.getTitle()).isEqualTo(updatedResponseDto.getTitle());
+
         verify(movieRepository).save(any(Movie.class));
     }
 
     @Test
     void updateMovie_WithInvalidId_ShouldThrowEntityNotFoundException() {
-        // Arrange
-        when(movieRepository.findById(99)).thenReturn(Optional.empty());
+        when(movieRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
-        // Act & Assert
-        assertThatThrownBy(() -> movieService.updateMovie(99, movieRequestDto))
+        assertThatThrownBy(() -> movieService.updateMovie(INVALID_ID, movieRequestDto))
                 .isExactlyInstanceOf(NotFoundException.class);
-        verify(movieRepository).findById(99);
+
+        verify(movieRepository).findById(INVALID_ID);
         verify(movieRepository, never()).save(any(Movie.class));
     }
 
     @Test
     void deleteMovie_WithValidId_ShouldDeleteMovie() {
-        // Arrange
-        when(movieRepository.existsById(1)).thenReturn(true);
-        doNothing().when(movieRepository).deleteById(1);
+        when(movieRepository.existsById(VALID_ID)).thenReturn(true);
+        doNothing().when(movieRepository).deleteById(VALID_ID);
 
-        // Act
-        movieService.deleteMovie(1);
+        movieService.deleteMovie(VALID_ID);
 
-        // Assert
-        verify(movieRepository).deleteById(1);
+        verify(movieRepository).deleteById(VALID_ID);
     }
 
     @Test
     void deleteMovie_WithInvalidId_ShouldThrowEntityNotFoundException() {
-        // Arrange
-        when(movieRepository.existsById(99)).thenReturn(false);
+        when(movieRepository.existsById(INVALID_ID)).thenReturn(false);
 
-        // Act & Assert
-        assertThatThrownBy(() -> movieService.deleteMovie(99))
+        assertThatThrownBy(() -> movieService.deleteMovie(INVALID_ID))
                 .isExactlyInstanceOf(NotFoundException.class);
-        verify(movieRepository, never()).deleteById(99);
+
+        verify(movieRepository, never()).deleteById(INVALID_ID);
     }
 }

@@ -1,9 +1,10 @@
 package com.github.k1mb1.cinema_java_spring.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.k1mb1.cinema_java_spring.config.Error;
+import com.github.k1mb1.cinema_java_spring.errors.Error;
 import com.github.k1mb1.cinema_java_spring.dtos.user.UserRequestDto;
 import com.github.k1mb1.cinema_java_spring.dtos.user.UserResponseDto;
+import com.github.k1mb1.cinema_java_spring.entities.User;
 import com.github.k1mb1.cinema_java_spring.utils.IntegrationTest;
 import com.github.k1mb1.cinema_java_spring.utils.IntegrationTestUtils;
 import lombok.val;
@@ -65,20 +66,21 @@ public class UserControllerTest {
     @Test
     public void testGetUserById_NotFound() throws Exception {
         var error = utils.expectError(get(baseUrl + "/99999"), HttpStatus.NOT_FOUND);
-        assertThat(error).isNotNull();
+
         assertThat(error.status()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
     public void testGetAllUsers() throws Exception {
+        val request1 = User.builder().username("user1@example.com").build();
+        val request2 = User.builder().username("user2@example.com").build();
+
         utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(
-                        createSampleUserRequest("user1@example.com"))),
+                post(baseUrl).content(objectMapper.writeValueAsString(request1)),
                 HttpStatus.CREATED
         );
         utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(
-                        createSampleUserRequest("user2@example.com"))),
+                post(baseUrl).content(objectMapper.writeValueAsString(request2)),
                 HttpStatus.CREATED
         );
 
@@ -90,14 +92,14 @@ public class UserControllerTest {
 
     @Test
     public void testUpdateUser() throws Exception {
-        val createRequest = createSampleUserRequest("update.test@example.com");
+        val createRequest = User.builder().username("user@example.com").build();
         val createdUser = utils.perform(
                 post(baseUrl).content(objectMapper.writeValueAsString(createRequest)),
                 HttpStatus.CREATED,
                 UserResponseDto.class
         );
 
-        val updateRequest = createSampleUserRequest("updated@example.com");
+        val updateRequest = User.builder().username("delete.test@example.com").build();
         val response = utils.perform(
                 put(baseUrl + "/" + createdUser.getId()).content(objectMapper.writeValueAsString(updateRequest)),
                 HttpStatus.OK,
@@ -110,22 +112,18 @@ public class UserControllerTest {
 
     @Test
     public void testUpdateUser_NotFound() throws Exception {
-        val updateRequest = createSampleUserRequest("nonexistent@example.com");
+        val updateRequest = User.builder().username("user@example.com").build();
 
-        val error = utils.expectError(
+        utils.expectError(
                 put(baseUrl + "/99999")
                         .content(objectMapper.writeValueAsString(updateRequest)),
                 HttpStatus.NOT_FOUND
         );
-
-        assertThat(error).isNotNull();
-        assertThat(error.status()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
     public void testDeleteUser() throws Exception {
-        // Create user first
-        val request = createSampleUserRequest("delete.test@example.com");
+        val request = User.builder().username("delete.test@example.com").build();
         val createdUser = utils.perform(
                 post(baseUrl)
                         .content(objectMapper.writeValueAsString(request)),
@@ -133,11 +131,11 @@ public class UserControllerTest {
                 UserResponseDto.class
         );
 
-        // Delete user
         utils.perform(delete(baseUrl + "/" + createdUser.getId()), HttpStatus.NO_CONTENT);
 
-        // Verify deletion
-        utils.expectError(get(baseUrl + "/" + createdUser.getId()), HttpStatus.NOT_FOUND);
+        val error = utils.expectError(get(baseUrl + "/" + createdUser.getId()), HttpStatus.NOT_FOUND);
+
+        assertThat(error.status()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test

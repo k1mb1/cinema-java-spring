@@ -1,7 +1,6 @@
 package com.github.k1mb1.cinema_java_spring.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.k1mb1.cinema_java_spring.config.Error;
 import com.github.k1mb1.cinema_java_spring.dtos.country.CountryRequestDto;
 import com.github.k1mb1.cinema_java_spring.dtos.country.CountryResponseDto;
 import com.github.k1mb1.cinema_java_spring.utils.IntegrationTest;
@@ -64,24 +63,24 @@ public class CountryControllerTest {
 
     @Test
     public void testGetCountryById_NotFound() throws Exception {
-        var error = utils.expectError(get(baseUrl + "/99999"), HttpStatus.NOT_FOUND);
-        assertThat(error).isNotNull();
-        assertThat(error.status()).isEqualTo(HttpStatus.NOT_FOUND);
+        utils.expectError(get(baseUrl + "/99999"), HttpStatus.NOT_FOUND);
     }
 
     @Test
     public void testGetAllCountries() throws Exception {
+        val request1 = new CountryRequestDto("Canada");
+        val request2 = new CountryRequestDto("United States");
         utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(new CountryRequestDto("Germany"))),
+                post(baseUrl).content(objectMapper.writeValueAsString(request1)),
                 HttpStatus.CREATED
         );
         utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(new CountryRequestDto("France"))),
+                post(baseUrl).content(objectMapper.writeValueAsString(request2)),
                 HttpStatus.CREATED
         );
 
         mockMvc.perform(get(baseUrl))
-                .andExpect(status().isOk())
+                .andExpect(status().is(HttpStatus.OK.value()))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.length()").value(equalTo(2)));
     }
@@ -110,39 +109,29 @@ public class CountryControllerTest {
     public void testUpdateCountry_NotFound() throws Exception {
         CountryRequestDto updateRequest = new CountryRequestDto("Non-existent");
 
-        val error = utils.expectError(
+        utils.expectError(
                 put(baseUrl + "/99999")
                         .content(objectMapper.writeValueAsString(updateRequest)),
                 HttpStatus.NOT_FOUND
         );
-
-        assertThat(error).isNotNull();
-        assertThat(error.status()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
     public void testDeleteCountry() throws Exception {
-        // Create country first
         val request = new CountryRequestDto("Italy");
-        System.out.println(objectMapper.writeValueAsString(request));
         val createdCountry = utils.perform(
                 post(baseUrl)
                         .content(objectMapper.writeValueAsString(request)),
                 HttpStatus.CREATED,
                 CountryResponseDto.class
         );
-        // Delete country
         utils.perform(delete(baseUrl + "/" + createdCountry.getId()), HttpStatus.NO_CONTENT);
 
-        // Verify deletion
         utils.expectError(get(baseUrl + "/" + createdCountry.getId()), HttpStatus.NOT_FOUND);
     }
 
     @Test
     public void testDeleteCountry_NotFound() throws Exception {
-        Error error = utils.expectError(delete(baseUrl + "/99999"), HttpStatus.NOT_FOUND);
-
-        assertThat(error).isNotNull();
-        assertThat(error.status()).isEqualTo(HttpStatus.NOT_FOUND);
+        utils.expectError(delete(baseUrl + "/99999"), HttpStatus.NOT_FOUND);
     }
 }
