@@ -68,7 +68,7 @@ jobs:
         sleep 15
         # Ждем пока приложение полностью запустится
         for i in {1..30}; do
-          if curl -f http://localhost:8080/actuator/health; then
+          if docker exec test-app curl -f http://localhost:8080/actuator/health; then
             echo "Application is healthy!"
             docker stop test-app
             exit 0
