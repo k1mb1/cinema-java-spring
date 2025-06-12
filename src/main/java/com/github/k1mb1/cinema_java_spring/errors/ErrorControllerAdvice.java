@@ -1,4 +1,4 @@
-package com.github.k1mb1.cinema_java_spring.config;
+package com.github.k1mb1.cinema_java_spring.errors;
 
 import lombok.val;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +12,7 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @ControllerAdvice
-public class ErrorController {
+public class ErrorControllerAdvice {
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<Error> handleNotFoundException(NotFoundException ex) {

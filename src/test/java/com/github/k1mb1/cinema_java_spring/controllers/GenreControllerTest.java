@@ -1,7 +1,6 @@
 package com.github.k1mb1.cinema_java_spring.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.k1mb1.cinema_java_spring.config.Error;
 import com.github.k1mb1.cinema_java_spring.dtos.genre.GenreRequestDto;
 import com.github.k1mb1.cinema_java_spring.dtos.genre.GenreResponseDto;
 import com.github.k1mb1.cinema_java_spring.utils.IntegrationTest;
@@ -64,19 +63,19 @@ public class GenreControllerTest {
 
     @Test
     public void testGetGenreById_NotFound() throws Exception {
-        var error = utils.expectError(get(baseUrl + "/99999"), HttpStatus.NOT_FOUND);
-        assertThat(error).isNotNull();
-        assertThat(error.status()).isEqualTo(HttpStatus.NOT_FOUND);
+        utils.expectError(get(baseUrl + "/99999"), HttpStatus.NOT_FOUND);
     }
 
     @Test
     public void testGetAllGenres() throws Exception {
+        val request1 = new GenreRequestDto("Action");
+        val request2 = new GenreRequestDto("Comedy");
         utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(new GenreRequestDto("Drama"))),
+                post(baseUrl).content(objectMapper.writeValueAsString(request1)),
                 HttpStatus.CREATED
         );
         utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(new GenreRequestDto("Horror"))),
+                post(baseUrl).content(objectMapper.writeValueAsString(request2)),
                 HttpStatus.CREATED
         );
 
@@ -108,21 +107,17 @@ public class GenreControllerTest {
 
     @Test
     public void testUpdateGenre_NotFound() throws Exception {
-        GenreRequestDto updateRequest = new GenreRequestDto("Non-existent");
+        val updateRequest = new GenreRequestDto("Non-existent");
 
-        val error = utils.expectError(
+        utils.expectError(
                 put(baseUrl + "/99999")
                         .content(objectMapper.writeValueAsString(updateRequest)),
                 HttpStatus.NOT_FOUND
         );
-
-        assertThat(error).isNotNull();
-        assertThat(error.status()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
     public void testDeleteGenre() throws Exception {
-        // Create genre first
         val request = new GenreRequestDto("Thriller");
         val createdGenre = utils.perform(
                 post(baseUrl)
@@ -130,18 +125,13 @@ public class GenreControllerTest {
                 HttpStatus.CREATED,
                 GenreResponseDto.class
         );
-        // Delete genre
         utils.perform(delete(baseUrl + "/" + createdGenre.getId()), HttpStatus.NO_CONTENT);
 
-        // Verify deletion
         utils.expectError(get(baseUrl + "/" + createdGenre.getId()), HttpStatus.NOT_FOUND);
     }
 
     @Test
     public void testDeleteGenre_NotFound() throws Exception {
-        Error error = utils.expectError(delete(baseUrl + "/99999"), HttpStatus.NOT_FOUND);
-
-        assertThat(error).isNotNull();
-        assertThat(error.status()).isEqualTo(HttpStatus.NOT_FOUND);
+        utils.expectError(delete(baseUrl + "/99999"), HttpStatus.NOT_FOUND);
     }
 }

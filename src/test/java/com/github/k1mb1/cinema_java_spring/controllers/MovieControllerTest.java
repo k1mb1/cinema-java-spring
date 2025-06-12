@@ -1,7 +1,6 @@
 package com.github.k1mb1.cinema_java_spring.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.k1mb1.cinema_java_spring.config.Error;
 import com.github.k1mb1.cinema_java_spring.dtos.movie.MovieRequestDto;
 import com.github.k1mb1.cinema_java_spring.dtos.movie.MovieResponseDto;
 import com.github.k1mb1.cinema_java_spring.utils.IntegrationTest;
@@ -71,22 +70,22 @@ public class MovieControllerTest {
     @Test
     @Rollback
     public void testGetMovieById_NotFound() throws Exception {
-        var error = utils.expectError(get(baseUrl + "/99999"), HttpStatus.NOT_FOUND);
-        assertThat(error).isNotNull();
-        assertThat(error.status()).isEqualTo(HttpStatus.NOT_FOUND);
+        utils.expectError(get(baseUrl + "/99999"), HttpStatus.NOT_FOUND);
     }
 
     @Test
     @Rollback
     public void testGetAllMovies() throws Exception {
+        val request1 = createSampleMovieRequest("Pulp Fiction", "Crime black comedy");
+        val request2 = createSampleMovieRequest("The Matrix", "Sci-fi action");
+
+
         utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(
-                        createSampleMovieRequest("Pulp Fiction", "Crime black comedy"))),
+                post(baseUrl).content(objectMapper.writeValueAsString(request1)),
                 HttpStatus.CREATED
         );
         utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(
-                        createSampleMovieRequest("The Matrix", "Sci-fi action"))),
+                post(baseUrl).content(objectMapper.writeValueAsString(request2)),
                 HttpStatus.CREATED
         );
 
@@ -123,20 +122,16 @@ public class MovieControllerTest {
     public void testUpdateMovie_NotFound() throws Exception {
         val updateRequest = createSampleMovieRequest("Non-existent Movie", "This movie doesn't exist");
 
-        val error = utils.expectError(
+        utils.expectError(
                 put(baseUrl + "/99999")
                         .content(objectMapper.writeValueAsString(updateRequest)),
                 HttpStatus.NOT_FOUND
         );
-
-        assertThat(error).isNotNull();
-        assertThat(error.status()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
     @Rollback
     public void testDeleteMovie() throws Exception {
-        // Create movie first
         val request = createSampleMovieRequest("Avatar", "Sci-fi adventure");
         val createdMovie = utils.perform(
                 post(baseUrl)
@@ -145,30 +140,23 @@ public class MovieControllerTest {
                 MovieResponseDto.class
         );
 
-        // Delete movie
         utils.perform(delete(baseUrl + "/" + createdMovie.getId()), HttpStatus.NO_CONTENT);
 
-        // Verify deletion
         utils.expectError(get(baseUrl + "/" + createdMovie.getId()), HttpStatus.NOT_FOUND);
     }
 
     @Test
     @Rollback
     public void testDeleteMovie_NotFound() throws Exception {
-        Error error = utils.expectError(delete(baseUrl + "/99999"), HttpStatus.NOT_FOUND);
-
-        assertThat(error).isNotNull();
-        assertThat(error.status()).isEqualTo(HttpStatus.NOT_FOUND);
+        utils.expectError(delete(baseUrl + "/99999"), HttpStatus.NOT_FOUND);
     }
 
-    // Helper method to create movie request objects
-    MovieRequestDto createSampleMovieRequest(String title, String description) {
-        MovieRequestDto request = new MovieRequestDto();
-        request.setTitle(title);
-        request.setDescription(description);
-        request.setReleaseDate(LocalDate.of(2023, 1, 1));
-        request.setGenreIds(Set.of(1));
-        request.setCountryIds(Set.of(1));
-        return request;
-    }
+        MovieRequestDto createSampleMovieRequest(String title, String description) {
+        return new MovieRequestDto()
+                .setTitle(title)
+                .setDescription(description)
+                .setReleaseDate(LocalDate.of(2023, 1, 1))
+                .setGenreIds(Set.of(1))
+                .setCountryIds(Set.of(1));
+        }
 }

@@ -1,6 +1,6 @@
 package com.github.k1mb1.cinema_java_spring.services;
 
-import com.github.k1mb1.cinema_java_spring.config.NotFoundException;
+import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
 import com.github.k1mb1.cinema_java_spring.dtos.user.UserRequestDto;
 import com.github.k1mb1.cinema_java_spring.dtos.user.UserResponseDto;
 import com.github.k1mb1.cinema_java_spring.mappers.UserMapper;
@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+
+import static com.github.k1mb1.cinema_java_spring.errors.ErrorMessages.USER_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +35,7 @@ public class UserService {
     public UserResponseDto getUserById(@NonNull Integer id) {
         return userMapper.toDto(
                 userRepository.findById(id)
-                        .orElseThrow(() -> new NotFoundException("User not found with ID: " + id))
+                        .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND.formatted(id)))
         );
     }
 
@@ -46,7 +48,7 @@ public class UserService {
 
     public UserResponseDto updateUser(@NonNull Integer id, @NonNull UserRequestDto userRequestDto) {
         val existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("User not found with ID: " + id));
+                .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND.formatted(id)));
 
         val updatedUser = userMapper.toEntity(userRequestDto)
                 .setId(existingUser.getId())
@@ -58,7 +60,7 @@ public class UserService {
 
     public void deleteUser(@NonNull Integer id) {
         if (!userRepository.existsById(id)) {
-            throw new NotFoundException("User not found with ID: " + id);
+            throw new NotFoundException(USER_NOT_FOUND.formatted(id));
         }
         userRepository.deleteById(id);
     }

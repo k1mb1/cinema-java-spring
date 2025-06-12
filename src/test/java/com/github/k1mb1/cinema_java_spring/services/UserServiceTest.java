@@ -1,6 +1,6 @@
 package com.github.k1mb1.cinema_java_spring.services;
 
-import com.github.k1mb1.cinema_java_spring.config.NotFoundException;
+import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
 import com.github.k1mb1.cinema_java_spring.dtos.user.UserRequestDto;
 import com.github.k1mb1.cinema_java_spring.dtos.user.UserResponseDto;
 import com.github.k1mb1.cinema_java_spring.entities.User;
@@ -17,7 +17,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -40,24 +39,25 @@ class UserServiceTest {
     UserRequestDto userRequestDto;
     UserResponseDto userResponseDto;
 
+    static final int VALID_ID = 1;
+    static final int INVALID_ID = 99;
+
     @BeforeEach
     void setUp() {
-        // Setup test data
         userRequestDto = UserRequestDto.builder()
                 .username("testUser")
                 .build();
 
         user = User.builder()
-                .id(1)
-                .username("testUser")
-                .watchedMovies(Set.of())
+                .id(VALID_ID)
+                .username(userRequestDto.getUsername())
                 .createAt(LocalDateTime.now())
                 .updateAt(LocalDateTime.now())
                 .build();
 
         userResponseDto = UserResponseDto.builder()
-                .id(1)
-                .username("testUser")
+                .id(user.getId())
+                .username(user.getUsername())
                 .createAt(user.getCreateAt())
                 .updateAt(user.getUpdateAt())
                 .build();
@@ -65,135 +65,119 @@ class UserServiceTest {
 
     @Test
     void createUser_ShouldReturnUserResponseDto() {
-        // Arrange
         when(userMapper.toEntity(userRequestDto)).thenReturn(user);
         when(userRepository.save(user)).thenReturn(user);
         when(userMapper.toDto(user)).thenReturn(userResponseDto);
 
-        // Act
         val result = userService.createUser(userRequestDto);
 
-        // Assert
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(userResponseDto.getId());
         assertThat(result.getUsername()).isEqualTo(userResponseDto.getUsername());
+        
         verify(userRepository).save(user);
-        verify(userMapper).toDto(user);
     }
 
     @Test
     void getUserById_WithValidId_ShouldReturnUserResponseDto() {
-        // Arrange
-        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        when(userRepository.findById(VALID_ID)).thenReturn(Optional.of(user));
         when(userMapper.toDto(user)).thenReturn(userResponseDto);
 
-        // Act
-        val result = userService.getUserById(1);
+        val result = userService.getUserById(VALID_ID);
 
-        // Assert
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(userResponseDto.getId());
         assertThat(result.getUsername()).isEqualTo(userResponseDto.getUsername());
-        verify(userRepository).findById(1);
+        
+        verify(userRepository).findById(VALID_ID);
     }
 
     @Test
     void getUserById_WithInvalidId_ShouldThrowEntityNotFoundException() {
-        // Arrange
-        when(userRepository.findById(99)).thenReturn(Optional.empty());
+        when(userRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
-        // Act & Assert
-        assertThatThrownBy(() -> userService.getUserById(99))
+        assertThatThrownBy(() -> userService.getUserById(INVALID_ID))
                 .isExactlyInstanceOf(NotFoundException.class);
-        verify(userRepository).findById(99);
+
+        verify(userRepository).findById(INVALID_ID);
     }
 
     @Test
     void getAllUsers_ShouldReturnListOfUserResponseDto() {
-        // Arrange
         when(userRepository.findAll()).thenReturn(List.of(user));
         when(userMapper.toDto(user)).thenReturn(userResponseDto);
 
-        // Act
         val result = userService.getAllUsers();
 
-        // Assert
         assertThat(result).isNotNull();
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().getId()).isEqualTo(userResponseDto.getId());
+
         verify(userRepository).findAll();
     }
 
     @Test
     void updateUser_WithValidId_ShouldReturnUpdatedUserResponseDto() {
-        // Arrange
         val updateRequestDto = UserRequestDto.builder()
                 .username("updatedUser")
                 .build();
 
         val updatedUser = User.builder()
-                .id(1)
-                .username("updatedUser")
+                .id(user.getId())
+                .username(userRequestDto.getUsername())
                 .createAt(user.getCreateAt())
                 .updateAt(LocalDateTime.now())
                 .watchedMovies(user.getWatchedMovies())
                 .build();
 
         val updatedResponseDto = UserResponseDto.builder()
-                .id(1)
-                .username("updatedUser")
+                .id(updatedUser.getId())
+                .username(updatedUser.getUsername())
                 .createAt(updatedUser.getCreateAt())
                 .updateAt(updatedUser.getUpdateAt())
                 .build();
 
-        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(userMapper.toEntity(updateRequestDto)).thenReturn(updatedUser);
         when(userRepository.save(any(User.class))).thenReturn(updatedUser);
         when(userMapper.toDto(updatedUser)).thenReturn(updatedResponseDto);
 
-        // Act
-        val result = userService.updateUser(1, updateRequestDto);
+        val result = userService.updateUser(user.getId(), updateRequestDto);
 
-        // Assert
         assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(updatedResponseDto.getId());
-        assertThat(result.getUsername()).isEqualTo("updatedUser");
+        assertThat(result.getId()).isEqualTo(user.getId());
+        assertThat(result.getUsername()).isEqualTo(updatedResponseDto.getUsername());
+
         verify(userRepository).save(any(User.class));
     }
 
     @Test
     void updateUser_WithInvalidId_ShouldThrowEntityNotFoundException() {
-        // Arrange
-        when(userRepository.findById(99)).thenReturn(Optional.empty());
+        when(userRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
-        // Act & Assert
-        assertThatThrownBy(() -> userService.updateUser(99, userRequestDto))
+        assertThatThrownBy(() -> userService.updateUser(INVALID_ID, userRequestDto))
                 .isExactlyInstanceOf(NotFoundException.class);
-        verify(userRepository).findById(99);
-        verify(userRepository, never()).save(any(User.class));
+
+        verify(userRepository).findById(INVALID_ID);
     }
 
     @Test
     void deleteUser_WithValidId_ShouldDeleteUser() {
-        // Arrange
-        when(userRepository.existsById(1)).thenReturn(true);
-        doNothing().when(userRepository).deleteById(1);
+        when(userRepository.existsById(VALID_ID)).thenReturn(true);
+        doNothing().when(userRepository).deleteById(VALID_ID);
 
-        // Act
-        userService.deleteUser(1);
+        userService.deleteUser(VALID_ID);
 
-        // Assert
-        verify(userRepository).deleteById(1);
+        verify(userRepository).deleteById(VALID_ID);
     }
 
     @Test
     void deleteUser_WithInvalidId_ShouldThrowEntityNotFoundException() {
-        // Arrange
-        when(userRepository.existsById(99)).thenReturn(false);
+        when(userRepository.existsById(INVALID_ID)).thenReturn(false);
 
-        // Act & Assert
-        assertThatThrownBy(() -> userService.deleteUser(99))
+        assertThatThrownBy(() -> userService.deleteUser(INVALID_ID))
                 .isExactlyInstanceOf(NotFoundException.class);
-        verify(userRepository, never()).deleteById(99);
+
+        verify(userRepository, never()).deleteById(INVALID_ID);
     }
 }

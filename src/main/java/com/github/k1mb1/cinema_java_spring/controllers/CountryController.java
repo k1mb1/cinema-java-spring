@@ -37,7 +37,10 @@ public class CountryController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CountryResponseDto> updateCountry(@NonNull @PathVariable Integer id, @NonNull @RequestBody CountryRequestDto countryRequestDto) {
+    public ResponseEntity<CountryResponseDto> updateCountry(
+            @NonNull @PathVariable Integer id,
+            @NonNull @RequestBody CountryRequestDto countryRequestDto
+    ) {
         return ResponseEntity.status(OK).body(countryService.updateCountry(id, countryRequestDto));
     }
 

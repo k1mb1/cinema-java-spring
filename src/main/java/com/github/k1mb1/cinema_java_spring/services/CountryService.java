@@ -1,8 +1,8 @@
 package com.github.k1mb1.cinema_java_spring.services;
 
-import com.github.k1mb1.cinema_java_spring.config.NotFoundException;
 import com.github.k1mb1.cinema_java_spring.dtos.country.CountryRequestDto;
 import com.github.k1mb1.cinema_java_spring.dtos.country.CountryResponseDto;
+import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
 import com.github.k1mb1.cinema_java_spring.mappers.CountryMapper;
 import com.github.k1mb1.cinema_java_spring.repositories.CountryRepository;
 import lombok.NonNull;
@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+
+import static com.github.k1mb1.cinema_java_spring.errors.ErrorMessages.COUNTRY_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +35,7 @@ public class CountryService {
     public CountryResponseDto getCountryById(@NonNull Integer id) {
         return countryMapper.toDto(
                 countryRepository.findById(id)
-                        .orElseThrow(() -> new NotFoundException("Country not found with ID: " + id))
+                        .orElseThrow(() -> new NotFoundException(COUNTRY_NOT_FOUND.formatted(id)))
         );
     }
 
@@ -46,7 +48,7 @@ public class CountryService {
 
     public CountryResponseDto updateCountry(@NonNull Integer id, @NonNull CountryRequestDto countryRequestDto) {
         val existingCountry = countryRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Country not found with ID: " + id));
+                .orElseThrow(() -> new NotFoundException(COUNTRY_NOT_FOUND.formatted(id)));
 
         val updatedCountry = countryMapper.toEntity(countryRequestDto)
                 .setId(existingCountry.getId())
@@ -58,7 +60,7 @@ public class CountryService {
 
     public void deleteCountry(@NonNull Integer id) {
         if (!countryRepository.existsById(id)) {
-            throw new NotFoundException("Country not found with ID: " + id);
+            throw new NotFoundException(COUNTRY_NOT_FOUND.formatted(id));
         }
         countryRepository.deleteById(id);
     }
