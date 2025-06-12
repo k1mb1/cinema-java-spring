@@ -65,18 +65,30 @@ jobs:
     - name: Test Docker image
       run: |
         docker run --rm -d --name test-app -p 8080:8080 cinema-java-spring:latest
-        sleep 15
+        sleep 10
+        # Проверяем, что контейнер запущен
+        if ! docker ps -q -f name=test-app | grep .; then
+          echo "Container failed to start. Logs:"
+          docker logs test-app || true
+          exit 1
+        fi
         # Ждем пока приложение полностью запустится
         for i in {1..30}; do
-          if docker exec test-app curl -f http://localhost:8080/actuator/health; then
+          if docker exec test-app curl -sf http://localhost:8080/actuator/health; then
             echo "Application is healthy!"
             docker stop test-app
             exit 0
           fi
           echo "Waiting for application to start... ($i/30)"
           sleep 2
+          # Проверяем, что контейнер еще жив
+          if ! docker ps -q -f name=test-app | grep .; then
+            echo "Container exited early. Logs:"
+            docker logs test-app || true
+            exit 1
+          fi
         done
         echo "Application failed to start"
-        docker logs test-app
-        docker stop test-app
+        docker logs test-app || true
+        docker stop test-app || true
         exit 1
