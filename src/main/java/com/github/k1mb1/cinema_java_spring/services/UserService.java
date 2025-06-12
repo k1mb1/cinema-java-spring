@@ -50,12 +50,9 @@ public class UserService {
         val existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND.formatted(id)));
 
-        val updatedUser = userMapper.toEntity(userRequestDto)
-                .setId(existingUser.getId())
-                .setCreateAt(existingUser.getCreateAt())
-                .setWatchedMovies(existingUser.getWatchedMovies());
+        userMapper.partialUpdate(userRequestDto, existingUser);
 
-        return userMapper.toDto(userRepository.save(updatedUser));
+        return userMapper.toDto(userRepository.save(existingUser));
     }
 
     public void deleteUser(@NonNull Integer id) {

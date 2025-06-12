@@ -50,12 +50,9 @@ public class CountryService {
         val existingCountry = countryRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(COUNTRY_NOT_FOUND.formatted(id)));
 
-        val updatedCountry = countryMapper.toEntity(countryRequestDto)
-                .setId(existingCountry.getId())
-                .setCreateAt(existingCountry.getCreateAt())
-                .setMovies(existingCountry.getMovies());
+        countryMapper.partialUpdate(countryRequestDto, existingCountry);
 
-        return countryMapper.toDto(countryRepository.save(updatedCountry));
+        return countryMapper.toDto(countryRepository.save(existingCountry));
     }
 
     public void deleteCountry(@NonNull Integer id) {

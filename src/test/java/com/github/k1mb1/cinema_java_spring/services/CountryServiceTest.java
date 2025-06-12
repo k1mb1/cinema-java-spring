@@ -137,8 +137,8 @@ class CountryServiceTest {
                 .build();
 
         when(countryRepository.findById(country.getId())).thenReturn(Optional.of(country));
-        when(countryMapper.toEntity(updateRequestDto)).thenReturn(updatedCountry);
-        when(countryRepository.save(any(Country.class))).thenReturn(updatedCountry);
+        doNothing().when(countryMapper).partialUpdate(updateRequestDto, country);
+        when(countryRepository.save(country)).thenReturn(updatedCountry);
         when(countryMapper.toDto(updatedCountry)).thenReturn(updatedResponseDto);
 
         val result = countryService.updateCountry(country.getId(), updateRequestDto);
@@ -147,7 +147,8 @@ class CountryServiceTest {
         assertThat(result.getId()).isEqualTo(country.getId());
         assertThat(result.getName()).isEqualTo(updatedCountry.getName());
 
-        verify(countryRepository).save(any(Country.class));
+        verify(countryMapper).partialUpdate(updateRequestDto, country);
+        verify(countryRepository).save(country);
     }
 
     @Test

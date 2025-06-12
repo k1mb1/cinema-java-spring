@@ -49,12 +49,9 @@ public class GenreService {
         val existingGenre = genreRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(GENRE_NOT_FOUND.formatted(id)));
 
-        val updatedGenre = genreMapper.toEntity(genreRequestDto)
-                .setId(existingGenre.getId())
-                .setCreateAt(existingGenre.getCreateAt())
-                .setMovies(existingGenre.getMovies());
+        genreMapper.partialUpdate(genreRequestDto, existingGenre);
 
-        return genreMapper.toDto(genreRepository.save(updatedGenre));
+        return genreMapper.toDto(genreRepository.save(existingGenre));
     }
 
     public void deleteGenre(@NonNull Integer id) {

@@ -28,11 +28,9 @@ public class WatchedMovieService {
     WatchedMovieMapper watchedMovieMapper;
 
     public WatchedMovieResponseDto markMovieAsWatched(@NonNull WatchedMovieRequestDto watchedMovieRequestDto) {
-        // Verify that user exists
         val user = userRepository.findById(watchedMovieRequestDto.getUserId())
                 .orElseThrow(() -> new NotFoundException("User not found with ID: " + watchedMovieRequestDto.getUserId()));
 
-        // Verify that movie exists
         val movie = movieRepository.findById(watchedMovieRequestDto.getMovieId())
                 .orElseThrow(() -> new NotFoundException("Movie not found with ID: " + watchedMovieRequestDto.getMovieId()));
 
