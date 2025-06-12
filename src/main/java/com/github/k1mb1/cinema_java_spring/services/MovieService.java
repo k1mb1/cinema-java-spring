@@ -22,6 +22,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static com.github.k1mb1.cinema_java_spring.errors.ErrorMessages.MOVIE_NOT_FOUND;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -35,6 +37,8 @@ public class MovieService {
 
     public MovieResponseDto createMovie(@NonNull MovieRequestDto movieRequestDto) {
         val movie = movieMapper.toEntity(movieRequestDto);
+        System.out.println(movieRequestDto);
+        System.out.println(movie.getGenres());
 
         // Set genres if provided
         if (movieRequestDto.getGenreIds() != null && !movieRequestDto.getGenreIds().isEmpty()) {
