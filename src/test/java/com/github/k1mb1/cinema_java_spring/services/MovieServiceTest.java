@@ -20,7 +20,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -206,10 +205,10 @@ class MovieServiceTest {
                 .build();
 
         when(movieRepository.findById(movie.getId())).thenReturn(Optional.of(movie));
-        when(movieMapper.toEntity(updateRequestDto)).thenReturn(updatedMovie);
+        doNothing().when(movieMapper).partialUpdate(updateRequestDto, movie);
         when(genreRepository.findAllById(any())).thenReturn(List.of(genre));
         when(countryRepository.findAllById(any())).thenReturn(List.of(country));
-        when(movieRepository.save(any(Movie.class))).thenReturn(updatedMovie);
+        when(movieRepository.save(movie)).thenReturn(updatedMovie);
         when(movieMapper.toDto(updatedMovie)).thenReturn(updatedResponseDto);
 
         val result = movieService.updateMovie(movie.getId(), updateRequestDto);
@@ -218,7 +217,8 @@ class MovieServiceTest {
         assertThat(result.getId()).isEqualTo(movie.getId());
         assertThat(result.getTitle()).isEqualTo(updatedResponseDto.getTitle());
 
-        verify(movieRepository).save(any(Movie.class));
+        verify(movieMapper).partialUpdate(updateRequestDto, movie);
+        verify(movieRepository).save(movie);
     }
 
     @Test

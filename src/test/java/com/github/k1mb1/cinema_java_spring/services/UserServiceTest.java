@@ -138,9 +138,9 @@ class UserServiceTest {
                 .build();
 
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-        when(userMapper.toEntity(updateRequestDto)).thenReturn(updatedUser);
-        when(userRepository.save(any(User.class))).thenReturn(updatedUser);
-        when(userMapper.toDto(updatedUser)).thenReturn(updatedResponseDto);
+        doNothing().when(userMapper).partialUpdate(updateRequestDto, user);
+        when(userRepository.save(user)).thenReturn(user);
+        when(userMapper.toDto(user)).thenReturn(updatedResponseDto);
 
         val result = userService.updateUser(user.getId(), updateRequestDto);
 
@@ -148,7 +148,8 @@ class UserServiceTest {
         assertThat(result.getId()).isEqualTo(user.getId());
         assertThat(result.getUsername()).isEqualTo(updatedResponseDto.getUsername());
 
-        verify(userRepository).save(any(User.class));
+        verify(userMapper).partialUpdate(updateRequestDto, user);
+        verify(userRepository).save(user);
     }
 
     @Test

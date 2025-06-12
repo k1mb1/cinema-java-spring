@@ -13,11 +13,13 @@ HELP.md
 .settings/
 .project
 .classpath
+.github
 
 # Исключаем временные файлы
 *.tmp
 *.temp
 *.log
+target
 
 # Исключаем тестовые файлы (можно закомментировать если нужны тесты в образе)
 src/test/
@@ -25,5 +27,5 @@ src/test/
 # Исключаем Docker файлы
 Dockerfile
 docker-compose.yml
-docker-compose-local.yml.
+docker-compose-local.yml
 .dockerignore

@@ -16,6 +16,8 @@ import lombok.val;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.github.k1mb1.cinema_java_spring.errors.ErrorMessages.MOVIE_NOT_FOUND;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -54,7 +56,7 @@ public class MovieService {
     public MovieResponseDto getMovieById(@NonNull Integer id) {
         return movieMapper.toDto(
                 movieRepository.findById(id)
-                        .orElseThrow(() -> new NotFoundException("Movie not found with ID: " + id))
+                        .orElseThrow(() -> new NotFoundException(MOVIE_NOT_FOUND.formatted(id)))
         );
     }
 
@@ -67,35 +69,28 @@ public class MovieService {
 
     public MovieResponseDto updateMovie(@NonNull Integer id, @NonNull MovieRequestDto movieRequestDto) {
         val existingMovie = movieRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Movie not found with ID: " + id));
+                .orElseThrow(() -> new NotFoundException(MOVIE_NOT_FOUND.formatted(id)));
 
-        val updatedMovie = movieMapper.toEntity(movieRequestDto)
-                .setId(existingMovie.getId())
-                .setCreateAt(existingMovie.getCreateAt())
-                .setWatchedMovies(existingMovie.getWatchedMovies());
+        movieMapper.partialUpdate(movieRequestDto, existingMovie);
 
         // Update genres if provided
         if (movieRequestDto.getGenreIds() != null && !movieRequestDto.getGenreIds().isEmpty()) {
             Set<Genre> genres = new HashSet<>(genreRepository.findAllById(movieRequestDto.getGenreIds()));
-            updatedMovie.setGenres(genres);
-        } else {
-            updatedMovie.setGenres(existingMovie.getGenres());
+            existingMovie.setGenres(genres);
         }
 
         // Update countries if provided
         if (movieRequestDto.getCountryIds() != null && !movieRequestDto.getCountryIds().isEmpty()) {
             Set<Country> countries = new HashSet<>(countryRepository.findAllById(movieRequestDto.getCountryIds()));
-            updatedMovie.setCountries(countries);
-        } else {
-            updatedMovie.setCountries(existingMovie.getCountries());
+            existingMovie.setCountries(countries);
         }
 
-        return movieMapper.toDto(movieRepository.save(updatedMovie));
+        return movieMapper.toDto(movieRepository.save(existingMovie));
     }
 
     public void deleteMovie(@NonNull Integer id) {
         if (!movieRepository.existsById(id)) {
-            throw new NotFoundException("Movie not found with ID: " + id);
+            throw new NotFoundException(MOVIE_NOT_FOUND.formatted(id));
         }
         movieRepository.deleteById(id);
     }

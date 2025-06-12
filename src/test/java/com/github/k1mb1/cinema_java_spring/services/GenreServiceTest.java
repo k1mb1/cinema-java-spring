@@ -137,17 +137,18 @@ class GenreServiceTest {
                 .build();
 
         when(genreRepository.findById(genre.getId())).thenReturn(Optional.of(genre));
-        when(genreMapper.toEntity(updateRequestDto)).thenReturn(updatedGenre);
-        when(genreRepository.save(any(Genre.class))).thenReturn(updatedGenre);
+        doNothing().when(genreMapper).partialUpdate(updateRequestDto, genre);
+        when(genreRepository.save(genre)).thenReturn(updatedGenre);
         when(genreMapper.toDto(updatedGenre)).thenReturn(updatedResponseDto);
 
         val result = genreService.updateGenre(genre.getId(), updateRequestDto);
 
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(genre.getId());
-        assertThat(result.getName()).isEqualTo(updateRequestDto.getName());
+        assertThat(result.getName()).isEqualTo(updatedGenre.getName());
 
-        verify(genreRepository).save(any(Genre.class));
+        verify(genreMapper).partialUpdate(updateRequestDto, genre);
+        verify(genreRepository).save(genre);
     }
 
     @Test
