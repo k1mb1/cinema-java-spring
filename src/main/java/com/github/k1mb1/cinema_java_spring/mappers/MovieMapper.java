@@ -6,11 +6,7 @@ import com.github.k1mb1.cinema_java_spring.entities.Country;
 import com.github.k1mb1.cinema_java_spring.entities.Genre;
 import com.github.k1mb1.cinema_java_spring.entities.Movie;
 import lombok.NonNull;
-import org.mapstruct.BeanMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 
 import java.util.Set;
 import java.util.stream.Collectors;

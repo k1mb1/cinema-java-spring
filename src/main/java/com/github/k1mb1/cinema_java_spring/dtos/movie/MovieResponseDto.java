@@ -28,7 +28,9 @@ public class MovieResponseDto {
     String ageRating;
     Integer durationMinutes;
 
+    @Builder.Default
     Set<GenreResponseDto> genres = new HashSet<>();
+    @Builder.Default
     Set<CountryResponseDto> countries = new HashSet<>();
 
     LocalDateTime createAt;

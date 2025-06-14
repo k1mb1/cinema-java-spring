@@ -1,8 +1,8 @@
 package com.github.k1mb1.cinema_java_spring.services;
 
-import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
 import com.github.k1mb1.cinema_java_spring.dtos.genre.GenreRequestDto;
 import com.github.k1mb1.cinema_java_spring.dtos.genre.GenreResponseDto;
+import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
 import com.github.k1mb1.cinema_java_spring.mappers.GenreMapper;
 import com.github.k1mb1.cinema_java_spring.repositories.GenreRepository;
 import lombok.NonNull;

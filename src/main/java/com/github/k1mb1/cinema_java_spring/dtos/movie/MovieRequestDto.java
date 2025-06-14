@@ -36,7 +36,9 @@ public class MovieRequestDto {
     @Positive(message = "Duration must be positive")
     Integer durationMinutes;
 
+    @Builder.Default
     Set<Integer> genreIds = new HashSet<>();
 
+    @Builder.Default
     Set<Integer> countryIds = new HashSet<>();
 }

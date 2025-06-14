@@ -3,11 +3,7 @@ package com.github.k1mb1.cinema_java_spring.mappers;
 import com.github.k1mb1.cinema_java_spring.dtos.user.UserRequestDto;
 import com.github.k1mb1.cinema_java_spring.dtos.user.UserResponseDto;
 import com.github.k1mb1.cinema_java_spring.entities.User;
-import org.mapstruct.BeanMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {

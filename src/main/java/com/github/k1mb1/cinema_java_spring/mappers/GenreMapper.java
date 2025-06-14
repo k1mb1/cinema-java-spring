@@ -3,11 +3,7 @@ package com.github.k1mb1.cinema_java_spring.mappers;
 import com.github.k1mb1.cinema_java_spring.dtos.genre.GenreRequestDto;
 import com.github.k1mb1.cinema_java_spring.dtos.genre.GenreResponseDto;
 import com.github.k1mb1.cinema_java_spring.entities.Genre;
-import org.mapstruct.BeanMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 
 import static org.mapstruct.MappingConstants.ComponentModel.SPRING;
 

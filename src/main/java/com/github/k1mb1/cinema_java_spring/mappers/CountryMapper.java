@@ -3,12 +3,7 @@ package com.github.k1mb1.cinema_java_spring.mappers;
 import com.github.k1mb1.cinema_java_spring.dtos.country.CountryRequestDto;
 import com.github.k1mb1.cinema_java_spring.dtos.country.CountryResponseDto;
 import com.github.k1mb1.cinema_java_spring.entities.Country;
-import org.mapstruct.BeanMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 
 @Mapper(
         componentModel = "spring",
