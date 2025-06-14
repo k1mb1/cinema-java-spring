@@ -6,8 +6,11 @@ import com.github.k1mb1.cinema_java_spring.entities.Country;
 import com.github.k1mb1.cinema_java_spring.entities.Genre;
 import com.github.k1mb1.cinema_java_spring.entities.Movie;
 import lombok.NonNull;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -26,6 +29,15 @@ public interface MovieMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "updateAt", ignore = true)
     Movie toEntity(MovieRequestDto movieRequestDto);
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createAt", ignore = true)
+    @Mapping(target = "updateAt", ignore = true)
+    @Mapping(target = "watchedMovies", ignore = true)
+    @Mapping(target = "genres", source = "genreIds")
+    @Mapping(target = "countries", source = "countryIds")
+    void partialUpdate(MovieRequestDto movieRequestDto, @MappingTarget Movie movie);
 
     default Set<Genre> mapGenreIds(Set<Integer> genreIds) {
         return genreIds.stream()
@@ -46,4 +58,5 @@ public interface MovieMapper {
     default Country mapIdToCountry(@NonNull Integer id) {
         return Country.builder().id(id).build();
     }
+
 }
