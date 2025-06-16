@@ -1,10 +1,10 @@
 package com.github.k1mb1.cinema_java_spring.services;
 
+import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
+import com.github.k1mb1.cinema_java_spring.mappers.UserMapper;
 import com.github.k1mb1.cinema_java_spring.models.user.UserEntity;
 import com.github.k1mb1.cinema_java_spring.models.user.UserRequestDto;
 import com.github.k1mb1.cinema_java_spring.models.user.UserResponseDto;
-import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
-import com.github.k1mb1.cinema_java_spring.mappers.UserMapper;
 import com.github.k1mb1.cinema_java_spring.repositories.UserRepository;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +13,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -70,9 +74,7 @@ class UserServiceTest {
 
         val result = userService.createUser(userRequestDto);
 
-        assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(userResponseDto.getId());
-        assertThat(result.getUsername()).isEqualTo(userResponseDto.getUsername());
+        assertUserResponse(userResponseDto, result);
 
         verify(userRepository).save(userEntity);
     }
@@ -85,8 +87,7 @@ class UserServiceTest {
         val result = userService.getUserById(VALID_ID);
 
         assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(userResponseDto.getId());
-        assertThat(result.getUsername()).isEqualTo(userResponseDto.getUsername());
+        assertUserResponse(userResponseDto, result);
 
         verify(userRepository).findById(VALID_ID);
     }
@@ -96,23 +97,29 @@ class UserServiceTest {
         when(userRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.getUserById(INVALID_ID))
-                .isExactlyInstanceOf(NotFoundException.class);
+                .isExactlyInstanceOf(NotFoundException.class)
+                .hasMessageContaining(String.valueOf(INVALID_ID));
 
         verify(userRepository).findById(INVALID_ID);
     }
 
     @Test
-    void getAllUsers_ShouldReturnListOfUserResponseDto() {
-        when(userRepository.findAll()).thenReturn(List.of(userEntity));
+    void getAllUsers_ShouldReturnPageOfUserResponseDto() {
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Page<UserEntity> userPage = new PageImpl<>(List.of(userEntity), pageable, 1);
+
+        when(userRepository.findAll(pageable)).thenReturn(userPage);
         when(userMapper.toDto(userEntity)).thenReturn(userResponseDto);
 
-//        val result = userService.getAllUsers();
+        val result = userService.getAllUsers(pageable);
 
-//        assertThat(result).isNotNull();
-//        assertThat(result).hasSize(1);
-//        assertThat(result.getFirst().getId()).isEqualTo(userResponseDto.getId());
+        assertThat(result).isNotNull();
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent()).hasSize(1);
+        assertUserResponse(userResponseDto, result.getContent().getFirst());
 
-        verify(userRepository).findAll();
+        verify(userRepository).findAll(pageable);
     }
 
     @Test
@@ -143,9 +150,7 @@ class UserServiceTest {
 
         val result = userService.updateUser(userEntity.getId(), updateRequestDto);
 
-        assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(userEntity.getId());
-        assertThat(result.getUsername()).isEqualTo(updatedResponseDto.getUsername());
+        assertUserResponse(updatedResponseDto, result);
 
         verify(userMapper).partialUpdate(updateRequestDto, userEntity);
         verify(userRepository).save(userEntity);
@@ -156,7 +161,8 @@ class UserServiceTest {
         when(userRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.updateUser(INVALID_ID, userRequestDto))
-                .isExactlyInstanceOf(NotFoundException.class);
+                .isExactlyInstanceOf(NotFoundException.class)
+                .hasMessageContaining(String.valueOf(INVALID_ID));
 
         verify(userRepository).findById(INVALID_ID);
     }
@@ -176,8 +182,21 @@ class UserServiceTest {
         when(userRepository.existsById(INVALID_ID)).thenReturn(false);
 
         assertThatThrownBy(() -> userService.deleteUser(INVALID_ID))
-                .isExactlyInstanceOf(NotFoundException.class);
+                .isExactlyInstanceOf(NotFoundException.class)
+                .hasMessageContaining(String.valueOf(INVALID_ID));
 
         verify(userRepository, never()).deleteById(INVALID_ID);
+    }
+
+    private void assertUserResponse(UserResponseDto expected, UserResponseDto actual) {
+        assertThat(actual).isNotNull()
+                .extracting(
+                        UserResponseDto::getId,
+                        UserResponseDto::getUsername
+                )
+                .containsExactly(
+                        expected.getId(),
+                        expected.getUsername()
+                );
     }
 }

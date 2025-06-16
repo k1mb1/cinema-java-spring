@@ -72,6 +72,8 @@ docker-compose up -d
 
 ## TODO
 
+- [ ] добавить проверку в ci покрытие тестами
+
 - [ ] movie
   - [ ] service tests refactor 
   - [ ] controller tests refacrtor
@@ -81,6 +83,8 @@ docker-compose up -d
 - [ ] watched movie
   - [ ] create service tests
   - [ ] create controller tests  
+
+- [ ] version in Base Entity; OptimisticLock
 
 - [ ] **Аутентификация и авторизация**
   - [ ] Добавить Spring Security

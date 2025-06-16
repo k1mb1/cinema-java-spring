@@ -1,10 +1,10 @@
 package com.github.k1mb1.cinema_java_spring.services;
 
+import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
+import com.github.k1mb1.cinema_java_spring.mappers.GenreMapper;
 import com.github.k1mb1.cinema_java_spring.models.genre.GenreEntity;
 import com.github.k1mb1.cinema_java_spring.models.genre.GenreRequestDto;
 import com.github.k1mb1.cinema_java_spring.models.genre.GenreResponseDto;
-import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
-import com.github.k1mb1.cinema_java_spring.mappers.GenreMapper;
 import com.github.k1mb1.cinema_java_spring.repositories.GenreRepository;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

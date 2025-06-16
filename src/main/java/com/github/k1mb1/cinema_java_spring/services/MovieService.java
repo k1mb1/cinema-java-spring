@@ -1,13 +1,13 @@
 package com.github.k1mb1.cinema_java_spring.services;
 
+import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
+import com.github.k1mb1.cinema_java_spring.mappers.MovieMapper;
 import com.github.k1mb1.cinema_java_spring.models.country.CountryEntity;
 import com.github.k1mb1.cinema_java_spring.models.genre.GenreEntity;
 import com.github.k1mb1.cinema_java_spring.models.movie.MovieEntity;
 import com.github.k1mb1.cinema_java_spring.models.movie.MovieFilter;
 import com.github.k1mb1.cinema_java_spring.models.movie.MovieRequestDto;
 import com.github.k1mb1.cinema_java_spring.models.movie.MovieResponseDto;
-import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
-import com.github.k1mb1.cinema_java_spring.mappers.MovieMapper;
 import com.github.k1mb1.cinema_java_spring.repositories.MovieRepository;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

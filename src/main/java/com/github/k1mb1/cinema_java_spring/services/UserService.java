@@ -1,10 +1,10 @@
 package com.github.k1mb1.cinema_java_spring.services;
 
+import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
+import com.github.k1mb1.cinema_java_spring.mappers.UserMapper;
 import com.github.k1mb1.cinema_java_spring.models.user.UserEntity;
 import com.github.k1mb1.cinema_java_spring.models.user.UserRequestDto;
 import com.github.k1mb1.cinema_java_spring.models.user.UserResponseDto;
-import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
-import com.github.k1mb1.cinema_java_spring.mappers.UserMapper;
 import com.github.k1mb1.cinema_java_spring.repositories.UserRepository;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

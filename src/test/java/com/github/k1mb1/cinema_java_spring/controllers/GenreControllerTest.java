@@ -26,10 +26,10 @@ public class GenreControllerTest {
 
     @Autowired
     MockMvc mockMvc;
-    
+
     @Autowired
     ObjectMapper objectMapper;
-    
+
     @Autowired
     IntegrationTestUtils utils;
 

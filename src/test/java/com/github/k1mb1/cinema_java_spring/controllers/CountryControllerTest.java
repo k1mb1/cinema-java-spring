@@ -6,7 +6,6 @@ import com.github.k1mb1.cinema_java_spring.models.country.CountryResponseDto;
 import com.github.k1mb1.cinema_java_spring.utils.IntegrationTest;
 import com.github.k1mb1.cinema_java_spring.utils.IntegrationTestUtils;
 import lombok.val;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,13 +23,13 @@ public class CountryControllerTest {
 
     static final String BASE_URL = "/api/v1/countries";
     static final int INVALID_ID = 99999;
-    
+
     @Autowired
     MockMvc mockMvc;
-    
+
     @Autowired
     ObjectMapper objectMapper;
-    
+
     @Autowired
     IntegrationTestUtils utils;
 
@@ -99,7 +98,7 @@ public class CountryControllerTest {
         );
 
         val updateRequest = new CountryRequestDto("Test Updated");
-        
+
         val response = utils.perform(
                 put(BASE_URL + "/" + createdCountry.getId()).content(objectMapper.writeValueAsString(updateRequest)),
                 HttpStatus.OK,
@@ -129,7 +128,7 @@ public class CountryControllerTest {
                 HttpStatus.CREATED,
                 CountryResponseDto.class
         );
-        
+
         utils.perform(delete(BASE_URL + "/" + createdCountry.getId()), HttpStatus.NO_CONTENT);
 
         utils.expectError(get(BASE_URL + "/" + createdCountry.getId()), HttpStatus.NOT_FOUND);
