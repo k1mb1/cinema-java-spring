@@ -22,8 +22,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static com.github.k1mb1.cinema_java_spring.utils.UnitTestUtils.assertExceptionWithMessage;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -96,9 +96,11 @@ class CountryServiceTest {
     void getCountryById_WithInvalidId_ShouldThrowNotFoundException() {
         when(countryRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> countryService.getCountryById(INVALID_ID))
-                .isExactlyInstanceOf(NotFoundException.class)
-                .hasMessageContaining(String.valueOf(INVALID_ID));
+        assertExceptionWithMessage(
+                () -> countryService.getCountryById(INVALID_ID),
+                NotFoundException.class,
+                String.valueOf(INVALID_ID)
+        );
 
         verify(countryRepository).findById(INVALID_ID);
     }
@@ -159,9 +161,11 @@ class CountryServiceTest {
     void updateCountry_WithInvalidId_ShouldThrowNotFoundException() {
         when(countryRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> countryService.updateCountry(INVALID_ID, countryRequestDto))
-                .isExactlyInstanceOf(NotFoundException.class)
-                .hasMessageContaining(String.valueOf(INVALID_ID));
+        assertExceptionWithMessage(
+                () -> countryService.updateCountry(INVALID_ID, countryRequestDto),
+                NotFoundException.class,
+                String.valueOf(INVALID_ID)
+        );
 
         verify(countryRepository).findById(INVALID_ID);
         verify(countryRepository, never()).save(any(CountryEntity.class));
@@ -181,8 +185,11 @@ class CountryServiceTest {
     void deleteCountry_WithInvalidId_ShouldThrowNotFoundException() {
         when(countryRepository.existsById(INVALID_ID)).thenReturn(false);
 
-        assertThatThrownBy(() -> countryService.deleteCountry(INVALID_ID))
-                .isExactlyInstanceOf(NotFoundException.class);
+        assertExceptionWithMessage(
+                () -> countryService.deleteCountry(INVALID_ID),
+                NotFoundException.class,
+                String.valueOf(INVALID_ID)
+        );
 
         verify(countryRepository, never()).deleteById(INVALID_ID);
     }
@@ -204,9 +211,11 @@ class CountryServiceTest {
     void getCountryEntityById_WithInvalidId_ShouldThrowNotFoundException() {
         when(countryRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> countryService.getCountryEntityById(INVALID_ID))
-                .isExactlyInstanceOf(NotFoundException.class)
-                .hasMessageContaining(String.valueOf(INVALID_ID));
+        assertExceptionWithMessage(
+                () -> countryService.getCountryEntityById(INVALID_ID),
+                NotFoundException.class,
+                String.valueOf(INVALID_ID)
+        );
 
         verify(countryRepository).findById(INVALID_ID);
     }

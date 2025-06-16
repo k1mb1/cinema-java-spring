@@ -22,8 +22,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static com.github.k1mb1.cinema_java_spring.utils.UnitTestUtils.assertExceptionWithMessage;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -96,9 +96,11 @@ class GenreServiceTest {
     void getGenreById_WithInvalidId_ShouldThrowEntityNotFoundException() {
         when(genreRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> genreService.getGenreById(INVALID_ID))
-                .isExactlyInstanceOf(NotFoundException.class)
-                .hasMessageContaining(String.valueOf(INVALID_ID));
+        assertExceptionWithMessage(
+                () -> genreService.getGenreById(INVALID_ID),
+                NotFoundException.class,
+                String.valueOf(INVALID_ID)
+        );
 
         verify(genreRepository).findById(INVALID_ID);
     }
@@ -158,9 +160,11 @@ class GenreServiceTest {
     void updateGenre_WithInvalidId_ShouldThrowEntityNotFoundException() {
         when(genreRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> genreService.updateGenre(INVALID_ID, genreRequestDto))
-                .isExactlyInstanceOf(NotFoundException.class)
-                .hasMessageContaining(String.valueOf(INVALID_ID));
+        assertExceptionWithMessage(
+                () -> genreService.updateGenre(INVALID_ID, genreRequestDto),
+                NotFoundException.class,
+                String.valueOf(INVALID_ID)
+        );
 
         verify(genreRepository).findById(INVALID_ID);
         verify(genreRepository, never()).save(any(GenreEntity.class));
@@ -180,9 +184,11 @@ class GenreServiceTest {
     void deleteGenre_WithInvalidId_ShouldThrowEntityNotFoundException() {
         when(genreRepository.existsById(INVALID_ID)).thenReturn(false);
 
-        assertThatThrownBy(() -> genreService.deleteGenre(INVALID_ID))
-                .isExactlyInstanceOf(NotFoundException.class)
-                .hasMessageContaining(String.valueOf(INVALID_ID));
+        assertExceptionWithMessage(
+                () -> genreService.deleteGenre(INVALID_ID),
+                NotFoundException.class,
+                String.valueOf(INVALID_ID)
+        );
 
         verify(genreRepository, never()).deleteById(INVALID_ID);
     }
@@ -204,9 +210,11 @@ class GenreServiceTest {
     void getGenreEntityById_WithInvalidId_ShouldThrowNotFoundException() {
         when(genreRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> genreService.getGenreEntityById(INVALID_ID))
-                .isExactlyInstanceOf(NotFoundException.class)
-                .hasMessageContaining(String.valueOf(INVALID_ID));
+        assertExceptionWithMessage(
+                () -> genreService.getGenreEntityById(INVALID_ID),
+                NotFoundException.class,
+                String.valueOf(INVALID_ID)
+        );
 
         verify(genreRepository).findById(INVALID_ID);
     }

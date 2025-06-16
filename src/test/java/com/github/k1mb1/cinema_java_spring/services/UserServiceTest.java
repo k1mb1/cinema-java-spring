@@ -22,8 +22,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static com.github.k1mb1.cinema_java_spring.utils.UnitTestUtils.assertExceptionWithMessage;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -96,9 +96,11 @@ class UserServiceTest {
     void getUserById_WithInvalidId_ShouldThrowEntityNotFoundException() {
         when(userRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userService.getUserById(INVALID_ID))
-                .isExactlyInstanceOf(NotFoundException.class)
-                .hasMessageContaining(String.valueOf(INVALID_ID));
+        assertExceptionWithMessage(
+                () -> userService.getUserById(INVALID_ID),
+                NotFoundException.class,
+                String.valueOf(INVALID_ID)
+        );
 
         verify(userRepository).findById(INVALID_ID);
     }
@@ -160,9 +162,11 @@ class UserServiceTest {
     void updateUser_WithInvalidId_ShouldThrowEntityNotFoundException() {
         when(userRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userService.updateUser(INVALID_ID, userRequestDto))
-                .isExactlyInstanceOf(NotFoundException.class)
-                .hasMessageContaining(String.valueOf(INVALID_ID));
+        assertExceptionWithMessage(
+                () -> userService.updateUser(INVALID_ID, userRequestDto),
+                NotFoundException.class,
+                String.valueOf(INVALID_ID)
+        );
 
         verify(userRepository).findById(INVALID_ID);
     }
@@ -181,9 +185,11 @@ class UserServiceTest {
     void deleteUser_WithInvalidId_ShouldThrowEntityNotFoundException() {
         when(userRepository.existsById(INVALID_ID)).thenReturn(false);
 
-        assertThatThrownBy(() -> userService.deleteUser(INVALID_ID))
-                .isExactlyInstanceOf(NotFoundException.class)
-                .hasMessageContaining(String.valueOf(INVALID_ID));
+        assertExceptionWithMessage(
+                () -> userService.deleteUser(INVALID_ID),
+                NotFoundException.class,
+                String.valueOf(INVALID_ID)
+        );
 
         verify(userRepository, never()).deleteById(INVALID_ID);
     }
