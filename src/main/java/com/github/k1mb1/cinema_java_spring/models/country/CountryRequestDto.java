@@ -1,6 +1,7 @@
-package com.github.k1mb1.cinema_java_spring.dtos.user;
+package com.github.k1mb1.cinema_java_spring.models.country;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,8 +11,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserRequestDto {
+public class CountryRequestDto {
 
-    @NotBlank(message = "Username cannot be blank")
-    String username;
+    @NotBlank
+    @Size(min = 2, max = 100)
+    String name;
 }

@@ -1,4 +1,4 @@
-package com.github.k1mb1.cinema_java_spring.dtos.watchedmovie;
+package com.github.k1mb1.cinema_java_spring.models.watchedmovie;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -12,9 +12,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class WatchedMovieRequestDto {
 
-    @NotNull(message = "User ID cannot be null")
+    @NotNull
     Integer userId;
 
-    @NotNull(message = "Movie ID cannot be null")
+    @NotNull
     Integer movieId;
 }

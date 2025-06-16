@@ -1,4 +1,4 @@
-package com.github.k1mb1.cinema_java_spring.dtos.genre;
+package com.github.k1mb1.cinema_java_spring.models.watchedmovie;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,10 +11,12 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GenreResponseDto {
+public class WatchedMovieResponseDto {
 
     Integer id;
-    String name;
+    Integer userId;
+    Integer movieId;
+    LocalDateTime watchedAt;
     LocalDateTime createAt;
     LocalDateTime updateAt;
 }

@@ -1,19 +1,19 @@
 package com.github.k1mb1.cinema_java_spring.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.k1mb1.cinema_java_spring.errors.Error;
-import com.github.k1mb1.cinema_java_spring.dtos.user.UserRequestDto;
-import com.github.k1mb1.cinema_java_spring.dtos.user.UserResponseDto;
-import com.github.k1mb1.cinema_java_spring.entities.User;
+import com.github.k1mb1.cinema_java_spring.models.user.UserRequestDto;
+import com.github.k1mb1.cinema_java_spring.models.user.UserResponseDto;
 import com.github.k1mb1.cinema_java_spring.utils.IntegrationTest;
 import com.github.k1mb1.cinema_java_spring.utils.IntegrationTestUtils;
 import lombok.val;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static com.github.k1mb1.cinema_java_spring.errors.ErrorMessages.USER_NOT_FOUND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -22,86 +22,96 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @IntegrationTest
 public class UserControllerTest {
 
-    final String baseUrl = "/api/users";
+    static final String BASE_URL = "/api/v1/users";
+    static final int INVALID_ID = 99999;
+
     @Autowired
     MockMvc mockMvc;
+
     @Autowired
     ObjectMapper objectMapper;
+
     @Autowired
     IntegrationTestUtils utils;
 
-    @Test
-    public void testCreateUser() throws Exception {
-        val request = createSampleUserRequest("john.doe@example.com");
+    UserRequestDto request;
 
-        val response = utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(request)),
-                HttpStatus.CREATED,
-                UserResponseDto.class
-        );
-
-        assertThat(response.getUsername()).isEqualTo(request.getUsername());
-        assertThat(response.getId()).isNotNull();
+    @BeforeEach
+    public void setUp() {
+        request = UserRequestDto.builder().username("john.doe").build();
     }
 
     @Test
-    public void testGetUserById() throws Exception {
-        val request = createSampleUserRequest("jane.doe@example.com");
+    public void createUser_ShouldReturnUserResponseDto() throws Exception {
+        val response = utils.perform(
+                post(BASE_URL).content(objectMapper.writeValueAsString(request)),
+                HttpStatus.CREATED,
+                UserResponseDto.class
+        );
+
+        assertThat(response.getId()).isNotNull();
+        assertUserResponse(response, request);
+    }
+
+    @Test
+    public void getUserById_WithValidId_ShouldReturnUserResponseDto() throws Exception {
         val createdUser = utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(request)),
+                post(BASE_URL).content(objectMapper.writeValueAsString(request)),
                 HttpStatus.CREATED,
                 UserResponseDto.class
         );
 
         val response = utils.perform(
-                get(baseUrl + "/" + createdUser.getId()),
+                get(BASE_URL + "/" + createdUser.getId()),
                 HttpStatus.OK,
                 UserResponseDto.class
         );
 
         assertThat(response.getId()).isEqualTo(createdUser.getId());
-        assertThat(response.getUsername()).isEqualTo(request.getUsername());
+        assertUserResponse(response, request);
     }
 
     @Test
-    public void testGetUserById_NotFound() throws Exception {
-        var error = utils.expectError(get(baseUrl + "/99999"), HttpStatus.NOT_FOUND);
-
-        assertThat(error.status()).isEqualTo(HttpStatus.NOT_FOUND);
+    public void getUserById_WithInvalidId_ShouldReturn404NotFound() throws Exception {
+        utils.expectError(
+                get(BASE_URL + "/" + INVALID_ID),
+                HttpStatus.NOT_FOUND,
+                USER_NOT_FOUND, INVALID_ID
+        );
     }
 
     @Test
-    public void testGetAllUsers() throws Exception {
-        val request1 = User.builder().username("user1@example.com").build();
-        val request2 = User.builder().username("user2@example.com").build();
-
+    public void getAllUsers_ShouldReturnListOfUserResponseDto() throws Exception {
         utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(request1)),
-                HttpStatus.CREATED
-        );
-        utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(request2)),
+                post(BASE_URL).content(objectMapper.writeValueAsString(request)),
                 HttpStatus.CREATED
         );
 
-        mockMvc.perform(get(baseUrl))
-                .andExpect(status().isOk())
+        val request2 = UserRequestDto.builder().username("user2").build();
+        utils.perform(
+                post(BASE_URL).content(objectMapper.writeValueAsString(request2)),
+                HttpStatus.CREATED
+        );
+
+        mockMvc.perform(get(BASE_URL))
+                .andExpect(status().is(HttpStatus.OK.value()))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.length()").value(equalTo(2)));
     }
 
     @Test
-    public void testUpdateUser() throws Exception {
-        val createRequest = User.builder().username("user@example.com").build();
+    public void updateUser_WithValidId_ShouldReturnUpdatedUserResponseDto() throws Exception {
         val createdUser = utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(createRequest)),
+                post(BASE_URL).content(objectMapper.writeValueAsString(request)),
                 HttpStatus.CREATED,
                 UserResponseDto.class
         );
 
-        val updateRequest = User.builder().username("delete.test@example.com").build();
+        val updateRequest = new UserRequestDto();
+        updateRequest.setUsername("updated.user");
+
         val response = utils.perform(
-                put(baseUrl + "/" + createdUser.getId()).content(objectMapper.writeValueAsString(updateRequest)),
+                put(BASE_URL + "/" + createdUser.getId()).content(objectMapper.writeValueAsString(updateRequest)),
                 HttpStatus.OK,
                 UserResponseDto.class
         );
@@ -111,45 +121,53 @@ public class UserControllerTest {
     }
 
     @Test
-    public void testUpdateUser_NotFound() throws Exception {
-        val updateRequest = User.builder().username("user@example.com").build();
+    public void updateUser_WithInvalidId_ShouldReturn404NotFound() throws Exception {
+        val updateRequest = UserRequestDto.builder().username("nonexistent").build();
 
         utils.expectError(
-                put(baseUrl + "/99999")
+                put(BASE_URL + "/" + INVALID_ID)
                         .content(objectMapper.writeValueAsString(updateRequest)),
-                HttpStatus.NOT_FOUND
+                HttpStatus.NOT_FOUND,
+                USER_NOT_FOUND, INVALID_ID
         );
     }
 
     @Test
-    public void testDeleteUser() throws Exception {
-        val request = User.builder().username("delete.test@example.com").build();
+    public void deleteUser_WithValidId_ShouldDeleteUser() throws Exception {
         val createdUser = utils.perform(
-                post(baseUrl)
+                post(BASE_URL)
                         .content(objectMapper.writeValueAsString(request)),
                 HttpStatus.CREATED,
                 UserResponseDto.class
         );
 
-        utils.perform(delete(baseUrl + "/" + createdUser.getId()), HttpStatus.NO_CONTENT);
+        utils.perform(delete(BASE_URL + "/" + createdUser.getId()), HttpStatus.NO_CONTENT);
 
-        val error = utils.expectError(get(baseUrl + "/" + createdUser.getId()), HttpStatus.NOT_FOUND);
-
-        assertThat(error.status()).isEqualTo(HttpStatus.NOT_FOUND);
+        utils.expectError(
+                get(BASE_URL + "/" + createdUser.getId()),
+                HttpStatus.NOT_FOUND,
+                USER_NOT_FOUND, createdUser.getId()
+        );
     }
 
     @Test
-    public void testDeleteUser_NotFound() throws Exception {
-        Error error = utils.expectError(delete(baseUrl + "/99999"), HttpStatus.NOT_FOUND);
-
-        assertThat(error).isNotNull();
-        assertThat(error.status()).isEqualTo(HttpStatus.NOT_FOUND);
+    public void deleteUser_WithInvalidId_ShouldReturn404NotFound() throws Exception {
+        utils.expectError(
+                delete(BASE_URL + "/" + INVALID_ID),
+                HttpStatus.NOT_FOUND,
+                USER_NOT_FOUND, INVALID_ID
+        );
     }
 
-    // Helper method to create user request objects
-    UserRequestDto createSampleUserRequest(String username) {
-        UserRequestDto request = new UserRequestDto();
-        request.setUsername(username);
-        return request;
+    private void assertUserResponse(UserResponseDto actual, UserRequestDto expected) {
+        assertThat(actual)
+                .extracting(
+                        UserResponseDto::getUsername,
+                        UserResponseDto::getUsername
+                )
+                .containsExactly(
+                        expected.getUsername(),
+                        expected.getUsername()
+                );//из-за того что containsExactly работает с минимум двумя полями
     }
 }

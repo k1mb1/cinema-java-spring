@@ -1,13 +1,14 @@
-package com.github.k1mb1.cinema_java_spring.dtos.movie;
+package com.github.k1mb1.cinema_java_spring.models.movie;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
+import com.github.k1mb1.cinema_java_spring.models.country.CountryResponseDto;
+import com.github.k1mb1.cinema_java_spring.models.genre.GenreResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,30 +16,23 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class MovieRequestDto {
+public class MovieResponseDto {
 
-    @NotBlank(message = "Title cannot be blank")
+    Integer id;
     String title;
-
     String description;
-
-    @Positive(message = "Year must be positive")
     Integer year;
-
     LocalDate releaseDate;
-
     Long worldGross;
-
     Long budget;
-
     String ageRating;
-
-    @Positive(message = "Duration must be positive")
     Integer durationMinutes;
 
     @Builder.Default
-    Set<Integer> genreIds = new HashSet<>();
-
+    Set<GenreResponseDto> genres = new HashSet<>();
     @Builder.Default
-    Set<Integer> countryIds = new HashSet<>();
+    Set<CountryResponseDto> countries = new HashSet<>();
+
+    LocalDateTime createAt;
+    LocalDateTime updateAt;
 }

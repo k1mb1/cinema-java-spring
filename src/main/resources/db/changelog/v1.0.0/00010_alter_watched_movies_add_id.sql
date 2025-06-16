@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset author:00010_alter_watched_movies_add_id
+--changeset k1mb1:00010_alter_watched_movies_add_id
 -- First drop the primary key constraint
 ALTER TABLE watched_movies DROP CONSTRAINT watched_movies_pkey;
 

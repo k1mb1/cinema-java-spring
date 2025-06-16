@@ -1,21 +1,21 @@
 package com.github.k1mb1.cinema_java_spring.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.k1mb1.cinema_java_spring.dtos.movie.MovieRequestDto;
-import com.github.k1mb1.cinema_java_spring.dtos.movie.MovieResponseDto;
+import com.github.k1mb1.cinema_java_spring.models.movie.MovieRequestDto;
+import com.github.k1mb1.cinema_java_spring.models.movie.MovieResponseDto;
 import com.github.k1mb1.cinema_java_spring.utils.IntegrationTest;
 import com.github.k1mb1.cinema_java_spring.utils.IntegrationTestUtils;
 import lombok.val;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
-import java.util.Set;
 
+import static com.github.k1mb1.cinema_java_spring.errors.ErrorMessages.MOVIE_NOT_FOUND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -24,139 +24,183 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @IntegrationTest
 public class MovieControllerTest {
 
-    final String baseUrl = "/api/movies";
+    static final String BASE_URL = "/api/v1/movies";
+    static final int INVALID_ID = 99999;
+
     @Autowired
     MockMvc mockMvc;
+
     @Autowired
     ObjectMapper objectMapper;
+
     @Autowired
     IntegrationTestUtils utils;
 
-    @Test
-    public void testCreateMovie() throws Exception {
-        val request = createSampleMovieRequest("Inception", "A mind-bending thriller");
+    MovieRequestDto request;
 
-        val response = utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(request)),
-                HttpStatus.CREATED,
-                MovieResponseDto.class
-        );
-
-        assertThat(response.getTitle()).isEqualTo(request.getTitle());
-        assertThat(response.getDescription()).isEqualTo(request.getDescription());
-        assertThat(response.getId()).isNotNull();
+    @BeforeEach
+    public void setUp() {
+        request = MovieRequestDto.builder()
+                .title("Inception")
+                .description("A mind-bending thriller")
+                .year(2010)
+                .worldGross(829895144L)
+                .budget(160000000L)
+                .ageRating("12+")
+                .durationMinutes(148)
+                .releaseDate(LocalDate.of(2023, 1, 1))
+                .build();
     }
 
     @Test
-    public void testGetMovieById() throws Exception {
-        val request = createSampleMovieRequest("The Godfather", "Crime drama film");
+    public void createMovie_ShouldReturnMovieResponseDto() throws Exception {
+        val response = utils.perform(
+                post(BASE_URL).content(objectMapper.writeValueAsString(request)),
+                HttpStatus.CREATED,
+                MovieResponseDto.class
+        );
+
+        assertThat(response.getId()).isNotNull();
+        assertMovieResponse(response, request);
+    }
+
+    @Test
+    public void getMovieById_WithValidId_ShouldReturnMovieResponseDto() throws Exception {
         val createdMovie = utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(request)),
+                post(BASE_URL).content(objectMapper.writeValueAsString(request)),
                 HttpStatus.CREATED,
                 MovieResponseDto.class
         );
 
         val response = utils.perform(
-                get(baseUrl + "/" + createdMovie.getId()),
+                get(BASE_URL + "/" + createdMovie.getId()),
                 HttpStatus.OK,
                 MovieResponseDto.class
         );
 
         assertThat(response.getId()).isEqualTo(createdMovie.getId());
-        assertThat(response.getTitle()).isEqualTo(request.getTitle());
-        assertThat(response.getDescription()).isEqualTo(request.getDescription());
+        assertMovieResponse(response, request);
     }
 
     @Test
-    @Rollback
-    public void testGetMovieById_NotFound() throws Exception {
-        utils.expectError(get(baseUrl + "/99999"), HttpStatus.NOT_FOUND);
+    public void getMovieById_WithInvalidId_ShouldReturn404NotFound() throws Exception {
+        utils.expectError(
+                get(BASE_URL + "/" + INVALID_ID),
+                HttpStatus.NOT_FOUND,
+                MOVIE_NOT_FOUND, INVALID_ID
+        );
     }
 
     @Test
-    @Rollback
-    public void testGetAllMovies() throws Exception {
-        val request1 = createSampleMovieRequest("Pulp Fiction", "Crime black comedy");
-        val request2 = createSampleMovieRequest("The Matrix", "Sci-fi action");
-
-
+    public void getAllMovies_ShouldReturnListOfMovieResponseDto() throws Exception {
         utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(request1)),
-                HttpStatus.CREATED
-        );
-        utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(request2)),
+                post(BASE_URL).content(objectMapper.writeValueAsString(request)),
                 HttpStatus.CREATED
         );
 
-        mockMvc.perform(get(baseUrl))
+        mockMvc.perform(get(BASE_URL))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.length()").value(equalTo(2)));
+                .andExpect(jsonPath("content.length()").value(equalTo(1)));
     }
 
     @Test
-    @Rollback
-    public void testUpdateMovie() throws Exception {
-        val createRequest = createSampleMovieRequest("Titanic", "Romance disaster film");
+    public void updateMovie_WithValidId_ShouldReturnUpdatedMovieResponseDto() throws Exception {
         val createdMovie = utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(createRequest)),
+                post(BASE_URL).content(objectMapper.writeValueAsString(request)),
                 HttpStatus.CREATED,
                 MovieResponseDto.class
         );
 
-        val updateRequest = createSampleMovieRequest("Titanic (1997)", "Epic romance and disaster film");
+        val updateRequest = MovieRequestDto.builder()
+                .worldGross(1829895144L)
+                .durationMinutes(200)
+                .build();
         val response = utils.perform(
-                put(baseUrl + "/" + createdMovie.getId()).content(objectMapper.writeValueAsString(updateRequest)),
+                put(BASE_URL + "/" + createdMovie.getId()).content(objectMapper.writeValueAsString(updateRequest)),
                 HttpStatus.OK,
                 MovieResponseDto.class
         );
 
-        assertThat(response.getId()).isEqualTo(createdMovie.getId());
-        assertThat(response.getTitle()).isEqualTo(updateRequest.getTitle());
-        assertThat(response.getDescription()).isEqualTo(updateRequest.getDescription());
+        assertThat(response)
+                .extracting(
+                        MovieResponseDto::getTitle,
+                        MovieResponseDto::getDescription,
+                        MovieResponseDto::getWorldGross,
+                        MovieResponseDto::getDurationMinutes,
+                        MovieResponseDto::getReleaseDate,
+                        MovieResponseDto::getYear,
+                        MovieResponseDto::getAgeRating,
+                        MovieResponseDto::getBudget)
+                .containsExactly(
+                        createdMovie.getTitle(),
+                        createdMovie.getDescription(),
+                        updateRequest.getWorldGross(),
+                        updateRequest.getDurationMinutes(),
+                        createdMovie.getReleaseDate(),
+                        createdMovie.getYear(),
+                        createdMovie.getAgeRating(),
+                        createdMovie.getBudget()
+                );
     }
 
     @Test
-    @Rollback
-    public void testUpdateMovie_NotFound() throws Exception {
-        val updateRequest = createSampleMovieRequest("Non-existent Movie", "This movie doesn't exist");
-
+    public void updateMovie_WithInvalidId_ShouldReturn404NotFound() throws Exception {
         utils.expectError(
-                put(baseUrl + "/99999")
-                        .content(objectMapper.writeValueAsString(updateRequest)),
-                HttpStatus.NOT_FOUND
+                put(BASE_URL + "/" + INVALID_ID)
+                        .content(objectMapper.writeValueAsString(request)),
+                HttpStatus.NOT_FOUND,
+                MOVIE_NOT_FOUND, INVALID_ID
         );
     }
 
     @Test
-    @Rollback
-    public void testDeleteMovie() throws Exception {
-        val request = createSampleMovieRequest("Avatar", "Sci-fi adventure");
+    public void deleteMovie_WithValidId_ShouldDeleteMovie() throws Exception {
         val createdMovie = utils.perform(
-                post(baseUrl)
+                post(BASE_URL)
                         .content(objectMapper.writeValueAsString(request)),
                 HttpStatus.CREATED,
                 MovieResponseDto.class
         );
 
-        utils.perform(delete(baseUrl + "/" + createdMovie.getId()), HttpStatus.NO_CONTENT);
+        utils.perform(delete(BASE_URL + "/" + createdMovie.getId()), HttpStatus.NO_CONTENT);
 
-        utils.expectError(get(baseUrl + "/" + createdMovie.getId()), HttpStatus.NOT_FOUND);
+        utils.expectError(
+                get(BASE_URL + "/" + createdMovie.getId()),
+                HttpStatus.NOT_FOUND,
+                MOVIE_NOT_FOUND, createdMovie.getId()
+        );
     }
 
     @Test
-    @Rollback
-    public void testDeleteMovie_NotFound() throws Exception {
-        utils.expectError(delete(baseUrl + "/99999"), HttpStatus.NOT_FOUND);
+    public void deleteMovie_WithInvalidId_ShouldReturn404NotFound() throws Exception {
+        utils.expectError(
+                delete(BASE_URL + "/" + INVALID_ID),
+                HttpStatus.NOT_FOUND,
+                MOVIE_NOT_FOUND, INVALID_ID
+        );
     }
 
-        MovieRequestDto createSampleMovieRequest(String title, String description) {
-        return new MovieRequestDto()
-                .setTitle(title)
-                .setDescription(description)
-                .setReleaseDate(LocalDate.of(2023, 1, 1))
-                .setGenreIds(Set.of(1))
-                .setCountryIds(Set.of(1));
-        }
+    private void assertMovieResponse(MovieResponseDto actual, MovieRequestDto expected) {
+        assertThat(actual).isNotNull()
+                .extracting(
+                        MovieResponseDto::getTitle,
+                        MovieResponseDto::getDescription,
+                        MovieResponseDto::getWorldGross,
+                        MovieResponseDto::getDurationMinutes,
+                        MovieResponseDto::getReleaseDate,
+                        MovieResponseDto::getYear,
+                        MovieResponseDto::getAgeRating,
+                        MovieResponseDto::getBudget)
+                .containsExactly(
+                        expected.getTitle(),
+                        expected.getDescription(),
+                        expected.getWorldGross(),
+                        expected.getDurationMinutes(),
+                        expected.getReleaseDate(),
+                        expected.getYear(),
+                        expected.getAgeRating(),
+                        expected.getBudget()
+                );
+    }
 }

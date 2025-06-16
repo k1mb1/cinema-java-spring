@@ -1,14 +1,17 @@
 package com.github.k1mb1.cinema_java_spring.services;
 
-import com.github.k1mb1.cinema_java_spring.dtos.genre.GenreRequestDto;
-import com.github.k1mb1.cinema_java_spring.dtos.genre.GenreResponseDto;
 import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
 import com.github.k1mb1.cinema_java_spring.mappers.GenreMapper;
+import com.github.k1mb1.cinema_java_spring.models.genre.GenreEntity;
+import com.github.k1mb1.cinema_java_spring.models.genre.GenreRequestDto;
+import com.github.k1mb1.cinema_java_spring.models.genre.GenreResponseDto;
 import com.github.k1mb1.cinema_java_spring.repositories.GenreRepository;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +28,9 @@ public class GenreService {
     GenreRepository genreRepository;
     GenreMapper genreMapper;
 
-    public GenreResponseDto createGenre(@NonNull GenreRequestDto genreRequestDto) {
+    public GenreResponseDto createGenre(
+            @NonNull GenreRequestDto genreRequestDto
+    ) {
         return genreMapper.toDto(
                 genreRepository.save(genreMapper.toEntity(genreRequestDto))
         );
@@ -33,21 +38,16 @@ public class GenreService {
 
     @Transactional(readOnly = true)
     public GenreResponseDto getGenreById(@NonNull Integer id) {
-        return genreMapper.toDto(
-                genreRepository.findById(id)
-                        .orElseThrow(() -> new NotFoundException(GENRE_NOT_FOUND.formatted(id))));
+        return genreMapper.toDto(findGenreById(id));
     }
 
     @Transactional(readOnly = true)
-    public List<GenreResponseDto> getAllGenres() {
-        return genreRepository.findAll().stream()
-                .map(genreMapper::toDto)
-                .toList();
+    public Page<GenreResponseDto> getAllGenres(@NonNull Pageable pageable) {
+        return genreRepository.findAll(pageable).map(genreMapper::toDto);
     }
 
     public GenreResponseDto updateGenre(@NonNull Integer id, @NonNull GenreRequestDto genreRequestDto) {
-        val existingGenre = genreRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(GENRE_NOT_FOUND.formatted(id)));
+        val existingGenre = findGenreById(id);
 
         genreMapper.partialUpdate(genreRequestDto, existingGenre);
 
@@ -59,5 +59,16 @@ public class GenreService {
             throw new NotFoundException(GENRE_NOT_FOUND.formatted(id));
         }
         genreRepository.deleteById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public GenreEntity findGenreById(@NonNull Integer id) {
+        return genreRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(GENRE_NOT_FOUND.formatted(id)));
+    }
+
+    @Transactional(readOnly = true)
+    public List<GenreEntity> findGenresByIds(@NonNull Iterable<Integer> ids) {
+        return genreRepository.findAllById(ids);
     }
 }

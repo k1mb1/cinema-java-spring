@@ -1,8 +1,9 @@
 package com.github.k1mb1.cinema_java_spring.controllers;
 
-import com.github.k1mb1.cinema_java_spring.dtos.watchedmovie.WatchedMovieRequestDto;
-import com.github.k1mb1.cinema_java_spring.dtos.watchedmovie.WatchedMovieResponseDto;
+import com.github.k1mb1.cinema_java_spring.models.watchedmovie.WatchedMovieRequestDto;
+import com.github.k1mb1.cinema_java_spring.models.watchedmovie.WatchedMovieResponseDto;
 import com.github.k1mb1.cinema_java_spring.services.WatchedMovieService;
+import jakarta.validation.Valid;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -14,7 +15,7 @@ import java.util.List;
 import static org.springframework.http.HttpStatus.*;
 
 @RestController
-@RequestMapping("/api/watched-movies")
+@RequestMapping("/api/v1/watched-movies")
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true)
 public class WatchedMovieController {
@@ -22,7 +23,9 @@ public class WatchedMovieController {
     WatchedMovieService watchedMovieService;
 
     @PostMapping
-    public ResponseEntity<WatchedMovieResponseDto> markMovieAsWatched(@NonNull @RequestBody WatchedMovieRequestDto watchedMovieRequestDto) {
+    public ResponseEntity<WatchedMovieResponseDto> markMovieAsWatched(
+            @Valid @NonNull @RequestBody WatchedMovieRequestDto watchedMovieRequestDto
+    ) {
         return ResponseEntity.status(CREATED).body(watchedMovieService.markMovieAsWatched(watchedMovieRequestDto));
     }
 

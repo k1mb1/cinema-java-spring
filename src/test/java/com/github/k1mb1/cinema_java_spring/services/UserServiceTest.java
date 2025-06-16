@@ -1,10 +1,10 @@
 package com.github.k1mb1.cinema_java_spring.services;
 
 import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
-import com.github.k1mb1.cinema_java_spring.dtos.user.UserRequestDto;
-import com.github.k1mb1.cinema_java_spring.dtos.user.UserResponseDto;
-import com.github.k1mb1.cinema_java_spring.entities.User;
 import com.github.k1mb1.cinema_java_spring.mappers.UserMapper;
+import com.github.k1mb1.cinema_java_spring.models.user.UserEntity;
+import com.github.k1mb1.cinema_java_spring.models.user.UserRequestDto;
+import com.github.k1mb1.cinema_java_spring.models.user.UserResponseDto;
 import com.github.k1mb1.cinema_java_spring.repositories.UserRepository;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,13 +13,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static com.github.k1mb1.cinema_java_spring.errors.ErrorMessages.USER_NOT_FOUND;
+import static com.github.k1mb1.cinema_java_spring.utils.UnitTestUtils.assertExceptionWithMessage;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,7 +39,7 @@ class UserServiceTest {
     @InjectMocks
     UserService userService;
 
-    User user;
+    UserEntity userEntity;
     UserRequestDto userRequestDto;
     UserResponseDto userResponseDto;
 
@@ -47,7 +52,7 @@ class UserServiceTest {
                 .username("testUser")
                 .build();
 
-        user = User.builder()
+        userEntity = UserEntity.builder()
                 .id(VALID_ID)
                 .username(userRequestDto.getUsername())
                 .createAt(LocalDateTime.now())
@@ -55,39 +60,36 @@ class UserServiceTest {
                 .build();
 
         userResponseDto = UserResponseDto.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .createAt(user.getCreateAt())
-                .updateAt(user.getUpdateAt())
+                .id(userEntity.getId())
+                .username(userEntity.getUsername())
+                .createAt(userEntity.getCreateAt())
+                .updateAt(userEntity.getUpdateAt())
                 .build();
     }
 
     @Test
     void createUser_ShouldReturnUserResponseDto() {
-        when(userMapper.toEntity(userRequestDto)).thenReturn(user);
-        when(userRepository.save(user)).thenReturn(user);
-        when(userMapper.toDto(user)).thenReturn(userResponseDto);
+        when(userMapper.toEntity(userRequestDto)).thenReturn(userEntity);
+        when(userRepository.save(userEntity)).thenReturn(userEntity);
+        when(userMapper.toDto(userEntity)).thenReturn(userResponseDto);
 
         val result = userService.createUser(userRequestDto);
 
-        assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(userResponseDto.getId());
-        assertThat(result.getUsername()).isEqualTo(userResponseDto.getUsername());
-        
-        verify(userRepository).save(user);
+        assertUserResponse(userResponseDto, result);
+
+        verify(userRepository).save(userEntity);
     }
 
     @Test
     void getUserById_WithValidId_ShouldReturnUserResponseDto() {
-        when(userRepository.findById(VALID_ID)).thenReturn(Optional.of(user));
-        when(userMapper.toDto(user)).thenReturn(userResponseDto);
+        when(userRepository.findById(VALID_ID)).thenReturn(Optional.of(userEntity));
+        when(userMapper.toDto(userEntity)).thenReturn(userResponseDto);
 
         val result = userService.getUserById(VALID_ID);
 
         assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(userResponseDto.getId());
-        assertThat(result.getUsername()).isEqualTo(userResponseDto.getUsername());
-        
+        assertUserResponse(userResponseDto, result);
+
         verify(userRepository).findById(VALID_ID);
     }
 
@@ -95,24 +97,32 @@ class UserServiceTest {
     void getUserById_WithInvalidId_ShouldThrowEntityNotFoundException() {
         when(userRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userService.getUserById(INVALID_ID))
-                .isExactlyInstanceOf(NotFoundException.class);
+        assertExceptionWithMessage(
+                () -> userService.getUserById(INVALID_ID),
+                NotFoundException.class,
+                USER_NOT_FOUND, INVALID_ID
+        );
 
         verify(userRepository).findById(INVALID_ID);
     }
 
     @Test
-    void getAllUsers_ShouldReturnListOfUserResponseDto() {
-        when(userRepository.findAll()).thenReturn(List.of(user));
-        when(userMapper.toDto(user)).thenReturn(userResponseDto);
+    void getAllUsers_ShouldReturnPageOfUserResponseDto() {
+        Pageable pageable = PageRequest.of(0, 10);
 
-        val result = userService.getAllUsers();
+        Page<UserEntity> userPage = new PageImpl<>(List.of(userEntity), pageable, 1);
+
+        when(userRepository.findAll(pageable)).thenReturn(userPage);
+        when(userMapper.toDto(userEntity)).thenReturn(userResponseDto);
+
+        val result = userService.getAllUsers(pageable);
 
         assertThat(result).isNotNull();
-        assertThat(result).hasSize(1);
-        assertThat(result.getFirst().getId()).isEqualTo(userResponseDto.getId());
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent()).hasSize(1);
+        assertUserResponse(userResponseDto, result.getContent().getFirst());
 
-        verify(userRepository).findAll();
+        verify(userRepository).findAll(pageable);
     }
 
     @Test
@@ -121,12 +131,12 @@ class UserServiceTest {
                 .username("updatedUser")
                 .build();
 
-        val updatedUser = User.builder()
-                .id(user.getId())
+        val updatedUser = UserEntity.builder()
+                .id(userEntity.getId())
                 .username(userRequestDto.getUsername())
-                .createAt(user.getCreateAt())
+                .createAt(userEntity.getCreateAt())
                 .updateAt(LocalDateTime.now())
-                .watchedMovies(user.getWatchedMovies())
+                .watchedMovies(userEntity.getWatchedMovies())
                 .build();
 
         val updatedResponseDto = UserResponseDto.builder()
@@ -136,27 +146,28 @@ class UserServiceTest {
                 .updateAt(updatedUser.getUpdateAt())
                 .build();
 
-        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-        doNothing().when(userMapper).partialUpdate(updateRequestDto, user);
-        when(userRepository.save(user)).thenReturn(user);
-        when(userMapper.toDto(user)).thenReturn(updatedResponseDto);
+        when(userRepository.findById(userEntity.getId())).thenReturn(Optional.of(userEntity));
+        doNothing().when(userMapper).partialUpdate(updateRequestDto, userEntity);
+        when(userRepository.save(userEntity)).thenReturn(userEntity);
+        when(userMapper.toDto(userEntity)).thenReturn(updatedResponseDto);
 
-        val result = userService.updateUser(user.getId(), updateRequestDto);
+        val result = userService.updateUser(userEntity.getId(), updateRequestDto);
 
-        assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(user.getId());
-        assertThat(result.getUsername()).isEqualTo(updatedResponseDto.getUsername());
+        assertUserResponse(updatedResponseDto, result);
 
-        verify(userMapper).partialUpdate(updateRequestDto, user);
-        verify(userRepository).save(user);
+        verify(userMapper).partialUpdate(updateRequestDto, userEntity);
+        verify(userRepository).save(userEntity);
     }
 
     @Test
     void updateUser_WithInvalidId_ShouldThrowEntityNotFoundException() {
         when(userRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userService.updateUser(INVALID_ID, userRequestDto))
-                .isExactlyInstanceOf(NotFoundException.class);
+        assertExceptionWithMessage(
+                () -> userService.updateUser(INVALID_ID, userRequestDto),
+                NotFoundException.class,
+                USER_NOT_FOUND, INVALID_ID
+        );
 
         verify(userRepository).findById(INVALID_ID);
     }
@@ -175,9 +186,24 @@ class UserServiceTest {
     void deleteUser_WithInvalidId_ShouldThrowEntityNotFoundException() {
         when(userRepository.existsById(INVALID_ID)).thenReturn(false);
 
-        assertThatThrownBy(() -> userService.deleteUser(INVALID_ID))
-                .isExactlyInstanceOf(NotFoundException.class);
+        assertExceptionWithMessage(
+                () -> userService.deleteUser(INVALID_ID),
+                NotFoundException.class,
+                USER_NOT_FOUND, INVALID_ID
+        );
 
         verify(userRepository, never()).deleteById(INVALID_ID);
+    }
+
+    private void assertUserResponse(UserResponseDto expected, UserResponseDto actual) {
+        assertThat(actual).isNotNull()
+                .extracting(
+                        UserResponseDto::getId,
+                        UserResponseDto::getUsername
+                )
+                .containsExactly(
+                        expected.getId(),
+                        expected.getUsername()
+                );
     }
 }

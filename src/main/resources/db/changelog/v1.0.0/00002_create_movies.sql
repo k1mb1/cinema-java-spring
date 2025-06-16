@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset author:00002_create_movies
+--changeset k1mb1:00002_create_movies
 CREATE TABLE movies
 (
     id          SERIAL PRIMARY KEY,

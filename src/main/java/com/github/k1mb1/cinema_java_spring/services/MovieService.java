@@ -1,23 +1,22 @@
 package com.github.k1mb1.cinema_java_spring.services;
 
-import com.github.k1mb1.cinema_java_spring.dtos.movie.MovieRequestDto;
-import com.github.k1mb1.cinema_java_spring.dtos.movie.MovieResponseDto;
-import com.github.k1mb1.cinema_java_spring.entities.Country;
-import com.github.k1mb1.cinema_java_spring.entities.Genre;
 import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
 import com.github.k1mb1.cinema_java_spring.mappers.MovieMapper;
-import com.github.k1mb1.cinema_java_spring.repositories.CountryRepository;
-import com.github.k1mb1.cinema_java_spring.repositories.GenreRepository;
+import com.github.k1mb1.cinema_java_spring.models.movie.MovieEntity;
+import com.github.k1mb1.cinema_java_spring.models.movie.MovieFilter;
+import com.github.k1mb1.cinema_java_spring.models.movie.MovieRequestDto;
+import com.github.k1mb1.cinema_java_spring.models.movie.MovieResponseDto;
 import com.github.k1mb1.cinema_java_spring.repositories.MovieRepository;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import static com.github.k1mb1.cinema_java_spring.errors.ErrorMessages.MOVIE_NOT_FOUND;
@@ -29,63 +28,41 @@ import static com.github.k1mb1.cinema_java_spring.errors.ErrorMessages.MOVIE_NOT
 public class MovieService {
 
     MovieRepository movieRepository;
-    GenreRepository genreRepository;
-    CountryRepository countryRepository;
     MovieMapper movieMapper;
+
+    GenreService genreService;
+    CountryService countryService;
 
     public MovieResponseDto createMovie(@NonNull MovieRequestDto movieRequestDto) {
         val movie = movieMapper.toEntity(movieRequestDto);
-        System.out.println(movieRequestDto);
-        System.out.println(movie.getGenres());
 
-        // Set genres if provided
-        if (movieRequestDto.getGenreIds() != null && !movieRequestDto.getGenreIds().isEmpty()) {
-            Set<Genre> genres = new HashSet<>(genreRepository.findAllById(movieRequestDto.getGenreIds()));
-            movie.setGenres(genres);
-        }
+        applyRelationships(movie, movieRequestDto);
 
-        // Set countries if provided
-        if (movieRequestDto.getCountryIds() != null && !movieRequestDto.getCountryIds().isEmpty()) {
-            Set<Country> countries = new HashSet<>(countryRepository.findAllById(movieRequestDto.getCountryIds()));
-            movie.setCountries(countries);
-        }
-
-        val savedMovie = movieRepository.save(movie);
-        return movieMapper.toDto(savedMovie);
+        return movieMapper.toDto(movieRepository.save(movie));
     }
 
     @Transactional(readOnly = true)
     public MovieResponseDto getMovieById(@NonNull Integer id) {
-        return movieMapper.toDto(
-                movieRepository.findById(id)
-                        .orElseThrow(() -> new NotFoundException(MOVIE_NOT_FOUND.formatted(id)))
-        );
+        return movieMapper.toDto(findMovieById(id));
     }
 
     @Transactional(readOnly = true)
-    public List<MovieResponseDto> getAllMovies() {
-        return movieRepository.findAll().stream()
-                .map(movieMapper::toDto)
-                .toList();
+    public Page<MovieResponseDto> getAllMovies(
+            MovieFilter filter,
+            @NonNull Pageable pageable
+    ) {
+        return movieRepository.findAll(filter.toSpecification(), pageable)
+                .map(movieMapper::toDto);
     }
 
-    public MovieResponseDto updateMovie(@NonNull Integer id, @NonNull MovieRequestDto movieRequestDto) {
-        val existingMovie = movieRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(MOVIE_NOT_FOUND.formatted(id)));
+    public MovieResponseDto updateMovie(
+            @NonNull Integer id,
+            @NonNull MovieRequestDto movieRequestDto
+    ) {
+        val existingMovie = findMovieById(id);
 
         movieMapper.partialUpdate(movieRequestDto, existingMovie);
-
-        // Update genres if provided
-        if (movieRequestDto.getGenreIds() != null && !movieRequestDto.getGenreIds().isEmpty()) {
-            Set<Genre> genres = new HashSet<>(genreRepository.findAllById(movieRequestDto.getGenreIds()));
-            existingMovie.setGenres(genres);
-        }
-
-        // Update countries if provided
-        if (movieRequestDto.getCountryIds() != null && !movieRequestDto.getCountryIds().isEmpty()) {
-            Set<Country> countries = new HashSet<>(countryRepository.findAllById(movieRequestDto.getCountryIds()));
-            existingMovie.setCountries(countries);
-        }
+        applyRelationships(existingMovie, movieRequestDto);
 
         return movieMapper.toDto(movieRepository.save(existingMovie));
     }
@@ -95,5 +72,28 @@ public class MovieService {
             throw new NotFoundException(MOVIE_NOT_FOUND.formatted(id));
         }
         movieRepository.deleteById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public MovieEntity findMovieById(@NonNull Integer id) {
+        return movieRepository.findWithRelationshipsById(id)
+                .orElseThrow(() -> new NotFoundException(MOVIE_NOT_FOUND.formatted(id)));
+    }
+
+    private void applyRelationships(@NonNull MovieEntity movie, @NonNull MovieRequestDto movieRequestDto) {
+        applyGenres(movie, movieRequestDto.getGenreIds());
+        applyCountries(movie, movieRequestDto.getCountryIds());
+    }
+
+    private void applyGenres(@NonNull MovieEntity movie, @NonNull Set<Integer> genreIds) {
+        if (!genreIds.isEmpty()) {
+            movie.setGenres(new HashSet<>(genreService.findGenresByIds(genreIds)));
+        }
+    }
+
+    private void applyCountries(@NonNull MovieEntity movie, @NonNull Set<Integer> countryIds) {
+        if (!countryIds.isEmpty()) {
+            movie.setCountries(new HashSet<>(countryService.findCountriesByIds(countryIds)));
+        }
     }
 }

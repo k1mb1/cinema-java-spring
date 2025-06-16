@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset author:00008_alter_movies_add_money_age_duration
+--changeset k1mb1:00008_alter_movies_add_money_age_duration
 ALTER TABLE movies
     ADD COLUMN world_gross BIGINT,
     ADD COLUMN budget BIGINT,
