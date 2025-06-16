@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CountryRequestDto {
 
-    @NotBlank(message = "Country name cannot be blank")
-    @Size(min = 2, max = 100, message = "Country name must be between 2 and 100 characters")
+    @NotBlank
+    @Size(min = 2, max = 100)
     String name;
 }

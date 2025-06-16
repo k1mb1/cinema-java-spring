@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static com.github.k1mb1.cinema_java_spring.errors.ErrorMessages.GENRE_NOT_FOUND;
 import static com.github.k1mb1.cinema_java_spring.utils.UnitTestUtils.assertExceptionWithMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -99,7 +100,7 @@ class GenreServiceTest {
         assertExceptionWithMessage(
                 () -> genreService.getGenreById(INVALID_ID),
                 NotFoundException.class,
-                String.valueOf(INVALID_ID)
+                GENRE_NOT_FOUND, INVALID_ID
         );
 
         verify(genreRepository).findById(INVALID_ID);
@@ -163,7 +164,7 @@ class GenreServiceTest {
         assertExceptionWithMessage(
                 () -> genreService.updateGenre(INVALID_ID, genreRequestDto),
                 NotFoundException.class,
-                String.valueOf(INVALID_ID)
+                GENRE_NOT_FOUND, INVALID_ID
         );
 
         verify(genreRepository).findById(INVALID_ID);
@@ -187,7 +188,7 @@ class GenreServiceTest {
         assertExceptionWithMessage(
                 () -> genreService.deleteGenre(INVALID_ID),
                 NotFoundException.class,
-                String.valueOf(INVALID_ID)
+                GENRE_NOT_FOUND, INVALID_ID
         );
 
         verify(genreRepository, never()).deleteById(INVALID_ID);
@@ -197,7 +198,7 @@ class GenreServiceTest {
     void getGenreEntityById_WithValidId_ShouldReturnGenreEntity() {
         when(genreRepository.findById(VALID_ID)).thenReturn(Optional.of(genreEntity));
 
-        val result = genreService.getGenreEntityById(VALID_ID);
+        val result = genreService.findGenreById(VALID_ID);
 
         assertThat(result).isNotNull()
                 .extracting(GenreEntity::getId, GenreEntity::getName)
@@ -211,9 +212,9 @@ class GenreServiceTest {
         when(genreRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
         assertExceptionWithMessage(
-                () -> genreService.getGenreEntityById(INVALID_ID),
+                () -> genreService.findGenreById(INVALID_ID),
                 NotFoundException.class,
-                String.valueOf(INVALID_ID)
+                GENRE_NOT_FOUND, INVALID_ID
         );
 
         verify(genreRepository).findById(INVALID_ID);
@@ -224,7 +225,7 @@ class GenreServiceTest {
         List<Integer> ids = List.of(VALID_ID);
         when(genreRepository.findAllById(ids)).thenReturn(List.of(genreEntity));
 
-        val result = genreService.getGenresByIds(ids);
+        val result = genreService.findGenresByIds(ids);
 
         assertThat(result).isNotNull()
                 .hasSize(1)

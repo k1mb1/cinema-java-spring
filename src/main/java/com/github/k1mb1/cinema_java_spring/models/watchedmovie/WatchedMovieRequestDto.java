@@ -12,9 +12,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class WatchedMovieRequestDto {
 
-    @NotNull(message = "User ID cannot be null")
+    @NotNull
     Integer userId;
 
-    @NotNull(message = "Movie ID cannot be null")
+    @NotNull
     Integer movieId;
 }

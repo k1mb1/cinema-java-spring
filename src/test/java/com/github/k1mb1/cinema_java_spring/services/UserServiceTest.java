@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static com.github.k1mb1.cinema_java_spring.errors.ErrorMessages.USER_NOT_FOUND;
 import static com.github.k1mb1.cinema_java_spring.utils.UnitTestUtils.assertExceptionWithMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -99,7 +100,7 @@ class UserServiceTest {
         assertExceptionWithMessage(
                 () -> userService.getUserById(INVALID_ID),
                 NotFoundException.class,
-                String.valueOf(INVALID_ID)
+                USER_NOT_FOUND, INVALID_ID
         );
 
         verify(userRepository).findById(INVALID_ID);
@@ -165,7 +166,7 @@ class UserServiceTest {
         assertExceptionWithMessage(
                 () -> userService.updateUser(INVALID_ID, userRequestDto),
                 NotFoundException.class,
-                String.valueOf(INVALID_ID)
+                USER_NOT_FOUND, INVALID_ID
         );
 
         verify(userRepository).findById(INVALID_ID);
@@ -188,7 +189,7 @@ class UserServiceTest {
         assertExceptionWithMessage(
                 () -> userService.deleteUser(INVALID_ID),
                 NotFoundException.class,
-                String.valueOf(INVALID_ID)
+                USER_NOT_FOUND, INVALID_ID
         );
 
         verify(userRepository, never()).deleteById(INVALID_ID);

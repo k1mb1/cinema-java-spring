@@ -2,8 +2,6 @@ package com.github.k1mb1.cinema_java_spring.services;
 
 import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
 import com.github.k1mb1.cinema_java_spring.mappers.MovieMapper;
-import com.github.k1mb1.cinema_java_spring.models.country.CountryEntity;
-import com.github.k1mb1.cinema_java_spring.models.genre.GenreEntity;
 import com.github.k1mb1.cinema_java_spring.models.movie.MovieEntity;
 import com.github.k1mb1.cinema_java_spring.models.movie.MovieFilter;
 import com.github.k1mb1.cinema_java_spring.models.movie.MovieRequestDto;
@@ -38,24 +36,14 @@ public class MovieService {
     public MovieResponseDto createMovie(@NonNull MovieRequestDto movieRequestDto) {
         val movie = movieMapper.toEntity(movieRequestDto);
 
-        // Set genres if provided
-        if (movieRequestDto.getGenreIds() != null && !movieRequestDto.getGenreIds().isEmpty()) {
-            Set<GenreEntity> genreEntities = new HashSet<>(genreService.getGenresByIds(movieRequestDto.getGenreIds()));
-            movie.setGenres(genreEntities);
-        }
-
-        // Set countries if provided
-        if (movieRequestDto.getCountryIds() != null && !movieRequestDto.getCountryIds().isEmpty()) {
-            Set<CountryEntity> countries = new HashSet<>(countryService.getCountriesByIds(movieRequestDto.getCountryIds()));
-            movie.setCountries(countries);
-        }
+        applyRelationships(movie, movieRequestDto);
 
         return movieMapper.toDto(movieRepository.save(movie));
     }
 
     @Transactional(readOnly = true)
     public MovieResponseDto getMovieById(@NonNull Integer id) {
-        return movieMapper.toDto(getMovieEntityById(id));
+        return movieMapper.toDto(findMovieById(id));
     }
 
     @Transactional(readOnly = true)
@@ -71,21 +59,10 @@ public class MovieService {
             @NonNull Integer id,
             @NonNull MovieRequestDto movieRequestDto
     ) {
-        val existingMovie = getMovieEntityById(id);
+        val existingMovie = findMovieById(id);
 
         movieMapper.partialUpdate(movieRequestDto, existingMovie);
-
-        // Update genres if provided
-        if (movieRequestDto.getGenreIds() != null && !movieRequestDto.getGenreIds().isEmpty()) {
-            Set<GenreEntity> genreEntities = new HashSet<>(genreService.getGenresByIds(movieRequestDto.getGenreIds()));
-            existingMovie.setGenres(genreEntities);
-        }
-
-        // Update countries if provided
-        if (movieRequestDto.getCountryIds() != null && !movieRequestDto.getCountryIds().isEmpty()) {
-            Set<CountryEntity> countries = new HashSet<>(countryService.getCountriesByIds(movieRequestDto.getCountryIds()));
-            existingMovie.setCountries(countries);
-        }
+        applyRelationships(existingMovie, movieRequestDto);
 
         return movieMapper.toDto(movieRepository.save(existingMovie));
     }
@@ -98,8 +75,25 @@ public class MovieService {
     }
 
     @Transactional(readOnly = true)
-    public MovieEntity getMovieEntityById(@NonNull Integer id) {
+    public MovieEntity findMovieById(@NonNull Integer id) {
         return movieRepository.findWithRelationshipsById(id)
                 .orElseThrow(() -> new NotFoundException(MOVIE_NOT_FOUND.formatted(id)));
+    }
+
+    private void applyRelationships(@NonNull MovieEntity movie, @NonNull MovieRequestDto movieRequestDto) {
+        applyGenres(movie, movieRequestDto.getGenreIds());
+        applyCountries(movie, movieRequestDto.getCountryIds());
+    }
+
+    private void applyGenres(@NonNull MovieEntity movie, @NonNull Set<Integer> genreIds) {
+        if (!genreIds.isEmpty()) {
+            movie.setGenres(new HashSet<>(genreService.findGenresByIds(genreIds)));
+        }
+    }
+
+    private void applyCountries(@NonNull MovieEntity movie, @NonNull Set<Integer> countryIds) {
+        if (!countryIds.isEmpty()) {
+            movie.setCountries(new HashSet<>(countryService.findCountriesByIds(countryIds)));
+        }
     }
 }

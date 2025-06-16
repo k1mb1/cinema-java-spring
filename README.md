@@ -18,17 +18,20 @@ REST API для управления кинотеатром, построенн�
 ### Локальный запуск
 
 1. **Клонируйте репозиторий:**
+
 ```bash
 git clone <repository-url>
 cd <repository-url>
 ```
 
 2. **Запустите базу данных через Docker:**
+
 ```bash
 docker-compose up -d db-cinema-java
 ```
 
 3. **Установите переменные окружения:**
+
 ```bash
 export POSTGRES_USER=postgres
 export POSTGRES_PASSWORD=postgres
@@ -37,6 +40,7 @@ export POSTGRES_PORT=5432
 ```
 
 4. **Запустите приложение:**
+
 ```bash
 ./mvnw spring-boot:run
 ```
@@ -52,16 +56,19 @@ docker-compose up -d
 ## API Документация
 
 После запуска приложения документация API доступна по адресам:
+
 - **Swagger UI**: `http://localhost:8080/swagger-ui.html`
 - **OpenAPI JSON**: `http://localhost:8080/v3/api-docs`
 
 ## Тестирование
 
 Проект включает:
+
 - **Unit тесты** для сервисов
 - **Integration тесты** для контроллеров с использованием Testcontainers
 
 Запуск тестов:
+
 ```bash
 ./mvnw test
 ```
@@ -75,31 +82,25 @@ docker-compose up -d
 - [ ] добавить проверку в ci покрытие тестами
 
 - [ ] movie
-  - [ ] service tests refactor 
-  - [ ] controller tests refacrtor
-  - [ ] check validation on fiter
-  - [ ] what filters add
+    - [ ] check validation on filters
+    - [ ] movie controller test filters
+    - [ ] what filters add
 
 - [ ] watched movie
-  - [ ] create service tests
-  - [ ] create controller tests  
+    - [ ] create service tests
+    - [ ] create controller tests
 
 - [ ] version in Base Entity; OptimisticLock
 
 - [ ] **Аутентификация и авторизация**
-  - [ ] Добавить Spring Security
-  - [ ] Реализовать JWT токены/ или использовать SSO
-  - [ ] Создать роли пользователей (USER, ADMIN)
-
-- [ ] **Улучшение API**
-  - [ ] Добавить пагинацию для списков
-  - [ ] Реализовать поиск и фильтрацию фильмов
-  - [ ] Добавить сортировку по различным критериям
+    - [ ] Добавить Spring Security
+    - [ ] Реализовать JWT токены/ или использовать SSO
+    - [ ] Создать роли пользователей (USER, ADMIN)
 
 - [ ] **Производительность и масштабируемость**
-  - [ ] Добавить кэширование (Redis)
-  - [ ] Оптимизация запросов к базе данных
-  - [ ] Добавить метрики и мониторинг
-  - [ ] Prometheus
+    - [ ] Добавить кэширование (Redis)
+    - [ ] Проанализировать оптимальность запросов к базе данных
+    - [ ] Добавить метрики и мониторинг Prometheus
 
-- [ ] WARN 237936 --- [cinema-java-spring] [nio-8080-exec-6] org.hibernate.orm.query: HHH90003004: firstResult/maxResults specified with collection fetch; applying in memory
+- [ ] WARN 237936 --- [cinema-java-spring] [nio-8080-exec-6] org.hibernate.orm.query: HHH90003004:
+  firstResult/maxResults specified with collection fetch; applying in memory

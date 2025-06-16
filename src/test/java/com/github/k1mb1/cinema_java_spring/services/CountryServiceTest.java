@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static com.github.k1mb1.cinema_java_spring.errors.ErrorMessages.COUNTRY_NOT_FOUND;
 import static com.github.k1mb1.cinema_java_spring.utils.UnitTestUtils.assertExceptionWithMessage;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -99,7 +100,7 @@ class CountryServiceTest {
         assertExceptionWithMessage(
                 () -> countryService.getCountryById(INVALID_ID),
                 NotFoundException.class,
-                String.valueOf(INVALID_ID)
+                COUNTRY_NOT_FOUND, INVALID_ID
         );
 
         verify(countryRepository).findById(INVALID_ID);
@@ -164,7 +165,7 @@ class CountryServiceTest {
         assertExceptionWithMessage(
                 () -> countryService.updateCountry(INVALID_ID, countryRequestDto),
                 NotFoundException.class,
-                String.valueOf(INVALID_ID)
+                COUNTRY_NOT_FOUND, INVALID_ID
         );
 
         verify(countryRepository).findById(INVALID_ID);
@@ -188,17 +189,17 @@ class CountryServiceTest {
         assertExceptionWithMessage(
                 () -> countryService.deleteCountry(INVALID_ID),
                 NotFoundException.class,
-                String.valueOf(INVALID_ID)
+                COUNTRY_NOT_FOUND, INVALID_ID
         );
 
         verify(countryRepository, never()).deleteById(INVALID_ID);
     }
 
     @Test
-    void getCountryEntityById_WithValidId_ShouldReturnCountryEntity() {
+    void findCountryEntityById_WithValidId_ShouldReturnCountry() {
         when(countryRepository.findById(VALID_ID)).thenReturn(Optional.of(countryEntity));
 
-        val result = countryService.getCountryEntityById(VALID_ID);
+        val result = countryService.findCountryById(VALID_ID);
 
         assertThat(result).isNotNull()
                 .extracting(CountryEntity::getId, CountryEntity::getName)
@@ -208,24 +209,24 @@ class CountryServiceTest {
     }
 
     @Test
-    void getCountryEntityById_WithInvalidId_ShouldThrowNotFoundException() {
+    void findCountryById_WithInvalidId_ShouldThrowNotFoundException() {
         when(countryRepository.findById(INVALID_ID)).thenReturn(Optional.empty());
 
         assertExceptionWithMessage(
-                () -> countryService.getCountryEntityById(INVALID_ID),
+                () -> countryService.findCountryById(INVALID_ID),
                 NotFoundException.class,
-                String.valueOf(INVALID_ID)
+                COUNTRY_NOT_FOUND, INVALID_ID
         );
 
         verify(countryRepository).findById(INVALID_ID);
     }
 
     @Test
-    void getCountriesByIds_ShouldReturnListOfCountryEntities() {
+    void findCountriesByIds_ShouldReturnListOfCountryEntities() {
         List<Integer> ids = List.of(VALID_ID);
         when(countryRepository.findAllById(ids)).thenReturn(List.of(countryEntity));
 
-        val result = countryService.getCountriesByIds(ids);
+        val result = countryService.findCountriesByIds(ids);
 
         assertThat(result).isNotNull()
                 .hasSize(1)

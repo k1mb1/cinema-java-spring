@@ -34,7 +34,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public UserResponseDto getUserById(@NonNull Integer id) {
-        return userMapper.toDto(getUserEntityById(id));
+        return userMapper.toDto(findUserById(id));
     }
 
     @Transactional(readOnly = true)
@@ -44,7 +44,7 @@ public class UserService {
     }
 
     public UserResponseDto updateUser(@NonNull Integer id, @NonNull UserRequestDto userRequestDto) {
-        val existingUser = getUserEntityById(id);
+        val existingUser = findUserById(id);
 
         userMapper.partialUpdate(userRequestDto, existingUser);
 
@@ -59,7 +59,7 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public UserEntity getUserEntityById(@NonNull Integer id) {
+    public UserEntity findUserById(@NonNull Integer id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(USER_NOT_FOUND.formatted(id)));
     }

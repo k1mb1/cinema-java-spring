@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class GenreRequestDto {
 
-    @NotBlank(message = "Genre name cannot be blank")
-    @Size(min = 2, max = 50, message = "Genre name must be between 2 and 50 characters")
+    @NotBlank
+    @Size(min = 2, max = 50)
     String name;
 }

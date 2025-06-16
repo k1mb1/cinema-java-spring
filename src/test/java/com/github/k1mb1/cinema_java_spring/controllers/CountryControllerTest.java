@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static com.github.k1mb1.cinema_java_spring.errors.ErrorMessages.COUNTRY_NOT_FOUND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -42,7 +43,6 @@ public class CountryControllerTest {
 
     @Test
     public void createCountry_ShouldReturnCountryResponseDto() throws Exception {
-
         val response = utils.perform(
                 post(BASE_URL).content(objectMapper.writeValueAsString(request)),
                 HttpStatus.CREATED,
@@ -50,7 +50,7 @@ public class CountryControllerTest {
         );
 
         assertThat(response.getId()).isNotNull();
-        assertThat(response.getName()).isEqualTo(request.getName());
+        assertCountryResponse(response, request);
     }
 
     @Test
@@ -68,12 +68,16 @@ public class CountryControllerTest {
         );
 
         assertThat(response.getId()).isEqualTo(createdCountry.getId());
-        assertThat(response.getName()).isEqualTo(request.getName());
+        assertCountryResponse(response, request);
     }
 
     @Test
     public void getCountryById_WithInvalidId_ShouldReturn404NotFound() throws Exception {
-        utils.expectError(get(BASE_URL + "/" + INVALID_ID), HttpStatus.NOT_FOUND);
+        utils.expectError(
+                get(BASE_URL + "/" + INVALID_ID),
+                HttpStatus.NOT_FOUND,
+                COUNTRY_NOT_FOUND, INVALID_ID
+        );
     }
 
     @Test
@@ -116,7 +120,8 @@ public class CountryControllerTest {
         utils.expectError(
                 put(BASE_URL + "/" + INVALID_ID)
                         .content(objectMapper.writeValueAsString(updateRequest)),
-                HttpStatus.NOT_FOUND
+                HttpStatus.NOT_FOUND,
+                COUNTRY_NOT_FOUND, INVALID_ID
         );
     }
 
@@ -131,11 +136,31 @@ public class CountryControllerTest {
 
         utils.perform(delete(BASE_URL + "/" + createdCountry.getId()), HttpStatus.NO_CONTENT);
 
-        utils.expectError(get(BASE_URL + "/" + createdCountry.getId()), HttpStatus.NOT_FOUND);
+        utils.expectError(
+                get(BASE_URL + "/" + createdCountry.getId()),
+                HttpStatus.NOT_FOUND,
+                COUNTRY_NOT_FOUND, createdCountry.getId()
+        );
     }
 
     @Test
     public void deleteCountry_WithInvalidId_ShouldReturn404NotFound() throws Exception {
-        utils.expectError(delete(BASE_URL + "/" + INVALID_ID), HttpStatus.NOT_FOUND);
+        utils.expectError(
+                delete(BASE_URL + "/" + INVALID_ID),
+                HttpStatus.NOT_FOUND,
+                COUNTRY_NOT_FOUND, INVALID_ID
+        );
+    }
+
+    private void assertCountryResponse(CountryResponseDto actual, CountryRequestDto expected) {
+        assertThat(actual)
+                .extracting(
+                        CountryResponseDto::getName,
+                        CountryResponseDto::getName
+                )
+                .containsExactly(
+                        expected.getName(),
+                        expected.getName()
+                );//из-за того что containsExactly работает с минимум двумя полями
     }
 }

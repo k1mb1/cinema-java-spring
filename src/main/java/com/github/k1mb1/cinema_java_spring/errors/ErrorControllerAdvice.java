@@ -25,13 +25,13 @@ public class ErrorControllerAdvice {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Error> handleValidationException(MethodArgumentNotValidException ex) {
-        val details = ex.getBindingResult()
+        val message = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .collect(Collectors.joining(", "));
-        log.error("Validation Exception: {} {}", ex.getMessage(), details);
+        log.error("Validation Exception: {} {}", message, ex.getMessage());
         return ResponseEntity.status(BAD_REQUEST)
-                .body(Error.of(ex.getMessage(), BAD_REQUEST, details));
+                .body(Error.of(message, BAD_REQUEST, ex.getMessage()));
     }
 }

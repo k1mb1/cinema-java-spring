@@ -38,7 +38,7 @@ public class GenreService {
 
     @Transactional(readOnly = true)
     public GenreResponseDto getGenreById(@NonNull Integer id) {
-        return genreMapper.toDto(getGenreEntityById(id));
+        return genreMapper.toDto(findGenreById(id));
     }
 
     @Transactional(readOnly = true)
@@ -47,7 +47,7 @@ public class GenreService {
     }
 
     public GenreResponseDto updateGenre(@NonNull Integer id, @NonNull GenreRequestDto genreRequestDto) {
-        val existingGenre = getGenreEntityById(id);
+        val existingGenre = findGenreById(id);
 
         genreMapper.partialUpdate(genreRequestDto, existingGenre);
 
@@ -62,13 +62,13 @@ public class GenreService {
     }
 
     @Transactional(readOnly = true)
-    public GenreEntity getGenreEntityById(@NonNull Integer id) {
+    public GenreEntity findGenreById(@NonNull Integer id) {
         return genreRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(GENRE_NOT_FOUND.formatted(id)));
     }
 
     @Transactional(readOnly = true)
-    public List<GenreEntity> getGenresByIds(@NonNull Iterable<Integer> ids) {
+    public List<GenreEntity> findGenresByIds(@NonNull Iterable<Integer> ids) {
         return genreRepository.findAllById(ids);
     }
 }

@@ -1,7 +1,6 @@
 package com.github.k1mb1.cinema_java_spring.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.k1mb1.cinema_java_spring.errors.Error;
 import com.github.k1mb1.cinema_java_spring.models.user.UserRequestDto;
 import com.github.k1mb1.cinema_java_spring.models.user.UserResponseDto;
 import com.github.k1mb1.cinema_java_spring.utils.IntegrationTest;
@@ -14,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static com.github.k1mb1.cinema_java_spring.errors.ErrorMessages.USER_NOT_FOUND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -49,8 +49,8 @@ public class UserControllerTest {
                 UserResponseDto.class
         );
 
-        assertThat(response.getUsername()).isEqualTo(request.getUsername());
         assertThat(response.getId()).isNotNull();
+        assertUserResponse(response, request);
     }
 
     @Test
@@ -68,14 +68,16 @@ public class UserControllerTest {
         );
 
         assertThat(response.getId()).isEqualTo(createdUser.getId());
-        assertThat(response.getUsername()).isEqualTo(request.getUsername());
+        assertUserResponse(response, request);
     }
 
     @Test
     public void getUserById_WithInvalidId_ShouldReturn404NotFound() throws Exception {
-        val error = utils.expectError(get(BASE_URL + "/" + INVALID_ID), HttpStatus.NOT_FOUND);
-
-        assertThat(error.status()).isEqualTo(HttpStatus.NOT_FOUND);
+        utils.expectError(
+                get(BASE_URL + "/" + INVALID_ID),
+                HttpStatus.NOT_FOUND,
+                USER_NOT_FOUND, INVALID_ID
+        );
     }
 
     @Test
@@ -92,7 +94,7 @@ public class UserControllerTest {
         );
 
         mockMvc.perform(get(BASE_URL))
-                .andExpect(status().isOk())
+                .andExpect(status().is(HttpStatus.OK.value()))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.length()").value(equalTo(2)));
     }
@@ -125,7 +127,8 @@ public class UserControllerTest {
         utils.expectError(
                 put(BASE_URL + "/" + INVALID_ID)
                         .content(objectMapper.writeValueAsString(updateRequest)),
-                HttpStatus.NOT_FOUND
+                HttpStatus.NOT_FOUND,
+                USER_NOT_FOUND, INVALID_ID
         );
     }
 
@@ -140,14 +143,31 @@ public class UserControllerTest {
 
         utils.perform(delete(BASE_URL + "/" + createdUser.getId()), HttpStatus.NO_CONTENT);
 
-        utils.expectError(get(BASE_URL + "/" + createdUser.getId()), HttpStatus.NOT_FOUND);
+        utils.expectError(
+                get(BASE_URL + "/" + createdUser.getId()),
+                HttpStatus.NOT_FOUND,
+                USER_NOT_FOUND, createdUser.getId()
+        );
     }
 
     @Test
     public void deleteUser_WithInvalidId_ShouldReturn404NotFound() throws Exception {
-        Error error = utils.expectError(delete(BASE_URL + "/" + INVALID_ID), HttpStatus.NOT_FOUND);
+        utils.expectError(
+                delete(BASE_URL + "/" + INVALID_ID),
+                HttpStatus.NOT_FOUND,
+                USER_NOT_FOUND, INVALID_ID
+        );
+    }
 
-        assertThat(error).isNotNull();
-        assertThat(error.status()).isEqualTo(HttpStatus.NOT_FOUND);
+    private void assertUserResponse(UserResponseDto actual, UserRequestDto expected) {
+        assertThat(actual)
+                .extracting(
+                        UserResponseDto::getUsername,
+                        UserResponseDto::getUsername
+                )
+                .containsExactly(
+                        expected.getUsername(),
+                        expected.getUsername()
+                );//из-за того что containsExactly работает с минимум двумя полями
     }
 }

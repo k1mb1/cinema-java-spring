@@ -38,7 +38,7 @@ public class CountryService {
 
     @Transactional(readOnly = true)
     public CountryResponseDto getCountryById(@NonNull Integer id) {
-        return countryMapper.toDto(getCountryEntityById(id));
+        return countryMapper.toDto(findCountryById(id));
     }
 
     @Transactional(readOnly = true)
@@ -52,7 +52,7 @@ public class CountryService {
             @NonNull Integer id,
             @NonNull CountryRequestDto countryRequestDto
     ) {
-        val existingCountry = getCountryEntityById(id);
+        val existingCountry = findCountryById(id);
 
         countryMapper.partialUpdate(countryRequestDto, existingCountry);
 
@@ -67,13 +67,13 @@ public class CountryService {
     }
 
     @Transactional(readOnly = true)
-    public CountryEntity getCountryEntityById(@NonNull Integer id) {
+    public CountryEntity findCountryById(@NonNull Integer id) {
         return countryRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(COUNTRY_NOT_FOUND.formatted(id)));
     }
 
     @Transactional(readOnly = true)
-    public List<CountryEntity> getCountriesByIds(@NonNull Iterable<Integer> ids) {
+    public List<CountryEntity> findCountriesByIds(@NonNull Iterable<Integer> ids) {
         return countryRepository.findAllById(ids);
     }
 }

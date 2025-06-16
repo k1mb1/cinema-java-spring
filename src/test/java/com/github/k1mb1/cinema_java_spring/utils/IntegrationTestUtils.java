@@ -24,14 +24,15 @@ public class IntegrationTestUtils {
     final MockMvc mockMvc;
 
     /**
-     * Выполняет MockMvc-запрос и преобразует тело ответа в объект указанного класса.
+     * Выполняет HTTP-запрос через MockMvc, проверяет ожидаемый статус ответа
+     * и преобразует тело ответа в объект указанного типа.
      *
-     * @param request подготовленный запрос
-     * @param status  ожидаемый HTTP статус ответа
-     * @param clazz   класс, в который нужно преобразовать ответ
+     * @param request подготовленный MockMvc-запрос
+     * @param status  ожидаемый HTTP-статус ответа
+     * @param clazz   класс, в который будет десериализован JSON-ответ
      * @param <T>     тип возвращаемого объекта
-     * @return объект, полученный из JSON-ответа
-     * @throws Exception если произошла ошибка при выполнении запроса или десериализации
+     * @return десериализованный объект из тела ответа
+     * @throws Exception если возникает ошибка при выполнении запроса или десериализации ответа
      */
     public <T> T perform(
             @NonNull MockHttpServletRequestBuilder request,
@@ -51,19 +52,21 @@ public class IntegrationTestUtils {
 
 
     /**
-     * Проверяет, что ответ содержит объект Error с указанным статусом
+     * Проверяет, что HTTP-ответ содержит объект {@link Error} с ожидаемым статусом и сообщением.
      *
-     * @param request        подготовленный запрос
-     * @param expectedStatus ожидаемый HTTP статус
-     * @return объект Error из ответа
-     * @throws Exception если произошла ошибка при выполнении запроса или десериализации
+     * @param request         подготовленный HTTP-запрос
+     * @param expectedStatus  ожидаемый HTTP-статус ответа
+     * @param expectedMessage ожидаемое сообщение об ошибке (с поддержкой форматирования)
+     * @param expectedArgs    аргументы для форматирования сообщения
+     * @throws Exception если возникает ошибка при выполнении запроса или десериализации ответа
      */
-    public Error expectError(
+    public void expectError(
             @NonNull MockHttpServletRequestBuilder request,
-            @NonNull HttpStatus expectedStatus
+            @NonNull HttpStatus expectedStatus,
+            @NonNull String expectedMessage,
+            @NonNull Object... expectedArgs
     ) throws Exception {
         val result = mockMvc.perform(request.contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().is(expectedStatus.value()))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 
@@ -73,17 +76,15 @@ public class IntegrationTestUtils {
         assertThat(error.status()).isEqualTo(expectedStatus);
         assertThat(error.code()).isEqualTo(expectedStatus.value());
         assertThat(error.timestamp()).isNotNull();
-        assertThat(error.message()).isNotNull();
-
-        return error;
+        assertThat(error.message()).isEqualTo(expectedMessage, expectedArgs);
     }
 
     /**
-     * Выполняет MockMvc-запрос и проверяет статус ответа
+     * Выполняет указанный HTTP-запрос через MockMvc и проверяет соответствие статуса ответа ожидаемому.
      *
-     * @param request        подготовленный запрос
-     * @param expectedStatus ожидаемый HTTP статус
-     * @throws Exception если произошла ошибка при выполнении запроса
+     * @param request        подготовленный MockMvc-запрос
+     * @param expectedStatus ожидаемый HTTP-статус ответа
+     * @throws Exception если возникает ошибка при выполнении запроса или проверке статуса
      */
     public void perform(
             @NonNull MockHttpServletRequestBuilder request,

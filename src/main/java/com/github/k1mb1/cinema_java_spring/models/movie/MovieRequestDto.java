@@ -16,36 +16,35 @@ import java.util.Set;
 @AllArgsConstructor
 public class MovieRequestDto {
 
-    @NotBlank(message = "Title cannot be blank")
-    @Size(min = 1, max = 255, message = "Title must be between 1 and 255 characters")
+    @NotBlank
+    @Size(min = 1, max = 255)
     String title;
 
     String description;
 
-    @NotNull(message = "Year cannot be null")
-    @Positive(message = "Year must be positive")
+    @NotNull
+    @PositiveOrZero
     Integer year;
 
     LocalDate releaseDate;
 
-    @PositiveOrZero(message = "World gross must be positive or zero")
+    @PositiveOrZero
     Long worldGross;
 
-    @PositiveOrZero(message = "Budget must be positive or zero")
+    @PositiveOrZero
     Long budget;
 
     String ageRating;
 
-    @NotNull(message = "Duration cannot be null")
-    @Positive(message = "Duration must be positive")
-    @Max(value = 1000, message = "Duration cannot exceed 1000 minutes")
+    @NotNull
+    @PositiveOrZero
     Integer durationMinutes;
 
     @Builder.Default
-    @NotEmpty(message = "At least one genre must be selected")
-    Set<@Positive(message = "Genre ID must be positive") Integer> genreIds = new HashSet<>();
+    @NotEmpty
+    Set<@NotNull Integer> genreIds = new HashSet<>();
 
     @Builder.Default
-    @NotEmpty(message = "At least one country must be selected")
-    Set<@Positive(message = "Country ID must be positive") Integer> countryIds = new HashSet<>();
+    @NotEmpty
+    Set<@NotNull Integer> countryIds = new HashSet<>();
 }

@@ -7,4 +7,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface WatchedMovieRepository extends JpaRepository<WatchedMovieEntity, Integer>, JpaSpecificationExecutor<WatchedMovieEntity> {
+
+    boolean existsByUserIdAndMovieId(Integer userId, Integer movieId);
+
+    void deleteByUserIdAndMovieId(Integer userId, Integer movieId);
 }
