@@ -1,10 +1,10 @@
 package com.github.k1mb1.cinema_java_spring.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.k1mb1.cinema_java_spring.models.user.UserEntity;
+import com.github.k1mb1.cinema_java_spring.models.user.UserRequestDto;
+import com.github.k1mb1.cinema_java_spring.models.user.UserResponseDto;
 import com.github.k1mb1.cinema_java_spring.errors.Error;
-import com.github.k1mb1.cinema_java_spring.dtos.user.UserRequestDto;
-import com.github.k1mb1.cinema_java_spring.dtos.user.UserResponseDto;
-import com.github.k1mb1.cinema_java_spring.entities.User;
 import com.github.k1mb1.cinema_java_spring.utils.IntegrationTest;
 import com.github.k1mb1.cinema_java_spring.utils.IntegrationTestUtils;
 import lombok.val;
@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @IntegrationTest
 public class UserControllerTest {
 
-    final String baseUrl = "/api/users";
+    final String baseUrl = "/api/v1/users";
     @Autowired
     MockMvc mockMvc;
     @Autowired
@@ -72,8 +72,8 @@ public class UserControllerTest {
 
     @Test
     public void testGetAllUsers() throws Exception {
-        val request1 = User.builder().username("user1@example.com").build();
-        val request2 = User.builder().username("user2@example.com").build();
+        val request1 = UserEntity.builder().username("user1@example.com").build();
+        val request2 = UserEntity.builder().username("user2@example.com").build();
 
         utils.perform(
                 post(baseUrl).content(objectMapper.writeValueAsString(request1)),
@@ -92,14 +92,14 @@ public class UserControllerTest {
 
     @Test
     public void testUpdateUser() throws Exception {
-        val createRequest = User.builder().username("user@example.com").build();
+        val createRequest = UserEntity.builder().username("user@example.com").build();
         val createdUser = utils.perform(
                 post(baseUrl).content(objectMapper.writeValueAsString(createRequest)),
                 HttpStatus.CREATED,
                 UserResponseDto.class
         );
 
-        val updateRequest = User.builder().username("delete.test@example.com").build();
+        val updateRequest = UserEntity.builder().username("delete.test@example.com").build();
         val response = utils.perform(
                 put(baseUrl + "/" + createdUser.getId()).content(objectMapper.writeValueAsString(updateRequest)),
                 HttpStatus.OK,
@@ -112,7 +112,7 @@ public class UserControllerTest {
 
     @Test
     public void testUpdateUser_NotFound() throws Exception {
-        val updateRequest = User.builder().username("user@example.com").build();
+        val updateRequest = UserEntity.builder().username("user@example.com").build();
 
         utils.expectError(
                 put(baseUrl + "/99999")
@@ -123,7 +123,7 @@ public class UserControllerTest {
 
     @Test
     public void testDeleteUser() throws Exception {
-        val request = User.builder().username("delete.test@example.com").build();
+        val request = UserEntity.builder().username("delete.test@example.com").build();
         val createdUser = utils.perform(
                 post(baseUrl)
                         .content(objectMapper.writeValueAsString(request)),

@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset author:00001_create_users
+--changeset k1mb1:00001_create_users
 CREATE TABLE users
 (
     id         SERIAL PRIMARY KEY,

@@ -1,4 +1,4 @@
-package com.github.k1mb1.cinema_java_spring.dtos.country;
+package com.github.k1mb1.cinema_java_spring.models.genre;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CountryResponseDto {
+public class GenreResponseDto {
 
     Integer id;
     String name;

@@ -1,4 +1,4 @@
-package com.github.k1mb1.cinema_java_spring.dtos.user;
+package com.github.k1mb1.cinema_java_spring.models.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

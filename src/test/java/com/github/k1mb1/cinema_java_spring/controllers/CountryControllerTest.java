@@ -1,11 +1,13 @@
 package com.github.k1mb1.cinema_java_spring.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.k1mb1.cinema_java_spring.dtos.country.CountryRequestDto;
-import com.github.k1mb1.cinema_java_spring.dtos.country.CountryResponseDto;
+import com.github.k1mb1.cinema_java_spring.models.country.CountryRequestDto;
+import com.github.k1mb1.cinema_java_spring.models.country.CountryResponseDto;
 import com.github.k1mb1.cinema_java_spring.utils.IntegrationTest;
 import com.github.k1mb1.cinema_java_spring.utils.IntegrationTestUtils;
 import lombok.val;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,39 +22,48 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @IntegrationTest
 public class CountryControllerTest {
 
-    final String baseUrl = "/api/countries";
+    static final String BASE_URL = "/api/v1/countries";
+    static final int INVALID_ID = 99999;
+    
     @Autowired
     MockMvc mockMvc;
+    
     @Autowired
     ObjectMapper objectMapper;
+    
     @Autowired
     IntegrationTestUtils utils;
 
-    @Test
-    public void testCreateCountry() throws Exception {
-        val request = new CountryRequestDto("United States");
+    CountryRequestDto request;
 
-        val response = utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(request)),
-                HttpStatus.CREATED,
-                CountryResponseDto.class
-        );
-
-        assertThat(response.getName()).isEqualTo(request.getName());
-        assertThat(response.getId()).isNotNull();
+    @BeforeEach
+    public void setUp() {
+        request = new CountryRequestDto("Test Country");
     }
 
     @Test
-    public void testGetCountryById() throws Exception {
-        val request = new CountryRequestDto("Canada");
+    public void createCountry_ShouldReturnCountryResponseDto() throws Exception {
+
+        val response = utils.perform(
+                post(BASE_URL).content(objectMapper.writeValueAsString(request)),
+                HttpStatus.CREATED,
+                CountryResponseDto.class
+        );
+
+        assertThat(response.getId()).isNotNull();
+        assertThat(response.getName()).isEqualTo(request.getName());
+    }
+
+    @Test
+    public void getCountryById_WithValidId_ShouldReturnCountryResponseDto() throws Exception {
         val createdCountry = utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(request)),
+                post(BASE_URL).content(objectMapper.writeValueAsString(request)),
                 HttpStatus.CREATED,
                 CountryResponseDto.class
         );
 
         val response = utils.perform(
-                get(baseUrl + "/" + createdCountry.getId()),
+                get(BASE_URL + "/" + createdCountry.getId()),
                 HttpStatus.OK,
                 CountryResponseDto.class
         );
@@ -62,41 +73,35 @@ public class CountryControllerTest {
     }
 
     @Test
-    public void testGetCountryById_NotFound() throws Exception {
-        utils.expectError(get(baseUrl + "/99999"), HttpStatus.NOT_FOUND);
+    public void getCountryById_WithInvalidId_ShouldReturn404NotFound() throws Exception {
+        utils.expectError(get(BASE_URL + "/" + INVALID_ID), HttpStatus.NOT_FOUND);
     }
 
     @Test
-    public void testGetAllCountries() throws Exception {
-        val request1 = new CountryRequestDto("Canada");
-        val request2 = new CountryRequestDto("United States");
+    public void getAllCountries_ShouldReturnPageOfCountryResponseDto() throws Exception {
         utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(request1)),
-                HttpStatus.CREATED
-        );
-        utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(request2)),
+                post(BASE_URL).content(objectMapper.writeValueAsString(request)),
                 HttpStatus.CREATED
         );
 
-        mockMvc.perform(get(baseUrl))
-                .andExpect(status().is(HttpStatus.OK.value()))
+        mockMvc.perform(get(BASE_URL))
+                .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.length()").value(equalTo(2)));
+                .andExpect(jsonPath("content.length()").value(equalTo(1)));
     }
 
     @Test
-    public void testUpdateCountry() throws Exception {
-        val createRequest = new CountryRequestDto("Spain");
+    public void updateCountry_WithValidId_ShouldReturnUpdatedCountryResponseDto() throws Exception {
         val createdCountry = utils.perform(
-                post(baseUrl).content(objectMapper.writeValueAsString(createRequest)),
+                post(BASE_URL).content(objectMapper.writeValueAsString(request)),
                 HttpStatus.CREATED,
                 CountryResponseDto.class
         );
 
-        val updateRequest = new CountryRequestDto("Spain Updated");
+        val updateRequest = new CountryRequestDto("Test Updated");
+        
         val response = utils.perform(
-                put(baseUrl + "/" + createdCountry.getId()).content(objectMapper.writeValueAsString(updateRequest)),
+                put(BASE_URL + "/" + createdCountry.getId()).content(objectMapper.writeValueAsString(updateRequest)),
                 HttpStatus.OK,
                 CountryResponseDto.class
         );
@@ -106,32 +111,32 @@ public class CountryControllerTest {
     }
 
     @Test
-    public void testUpdateCountry_NotFound() throws Exception {
+    public void updateCountry_WithInvalidId_ShouldReturn404NotFound() throws Exception {
         CountryRequestDto updateRequest = new CountryRequestDto("Non-existent");
 
         utils.expectError(
-                put(baseUrl + "/99999")
+                put(BASE_URL + "/" + INVALID_ID)
                         .content(objectMapper.writeValueAsString(updateRequest)),
                 HttpStatus.NOT_FOUND
         );
     }
 
     @Test
-    public void testDeleteCountry() throws Exception {
-        val request = new CountryRequestDto("Italy");
+    public void deleteCountry_WithValidId_ShouldDeleteCountry() throws Exception {
         val createdCountry = utils.perform(
-                post(baseUrl)
+                post(BASE_URL)
                         .content(objectMapper.writeValueAsString(request)),
                 HttpStatus.CREATED,
                 CountryResponseDto.class
         );
-        utils.perform(delete(baseUrl + "/" + createdCountry.getId()), HttpStatus.NO_CONTENT);
+        
+        utils.perform(delete(BASE_URL + "/" + createdCountry.getId()), HttpStatus.NO_CONTENT);
 
-        utils.expectError(get(baseUrl + "/" + createdCountry.getId()), HttpStatus.NOT_FOUND);
+        utils.expectError(get(BASE_URL + "/" + createdCountry.getId()), HttpStatus.NOT_FOUND);
     }
 
     @Test
-    public void testDeleteCountry_NotFound() throws Exception {
-        utils.expectError(delete(baseUrl + "/99999"), HttpStatus.NOT_FOUND);
+    public void deleteCountry_WithInvalidId_ShouldReturn404NotFound() throws Exception {
+        utils.expectError(delete(BASE_URL + "/" + INVALID_ID), HttpStatus.NOT_FOUND);
     }
 }

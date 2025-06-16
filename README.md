@@ -72,6 +72,16 @@ docker-compose up -d
 
 ## TODO
 
+- [ ] movie
+  - [ ] service tests refactor 
+  - [ ] controller tests refacrtor
+  - [ ] check validation on fiter
+  - [ ] what filters add
+
+- [ ] watched movie
+  - [ ] create service tests
+  - [ ] create controller tests  
+
 - [ ] **Аутентификация и авторизация**
   - [ ] Добавить Spring Security
   - [ ] Реализовать JWT токены/ или использовать SSO
@@ -86,8 +96,6 @@ docker-compose up -d
   - [ ] Добавить кэширование (Redis)
   - [ ] Оптимизация запросов к базе данных
   - [ ] Добавить метрики и мониторинг
+  - [ ] Prometheus
 
-- [ ] **Интеграции**
-  - [ ] Интеграция с внешними API фильмов (TMDB, OMDB)
-  - [ ] Автоматическое получение постеров и метаданных
-  - [ ] Интеграция с сервисами для просмотра трейлеров
+- [ ] WARN 237936 --- [cinema-java-spring] [nio-8080-exec-6] org.hibernate.orm.query: HHH90003004: firstResult/maxResults specified with collection fetch; applying in memory

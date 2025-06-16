@@ -1,10 +1,10 @@
 package com.github.k1mb1.cinema_java_spring.mappers;
 
-import com.github.k1mb1.cinema_java_spring.dtos.movie.MovieRequestDto;
-import com.github.k1mb1.cinema_java_spring.dtos.movie.MovieResponseDto;
-import com.github.k1mb1.cinema_java_spring.entities.Country;
-import com.github.k1mb1.cinema_java_spring.entities.Genre;
-import com.github.k1mb1.cinema_java_spring.entities.Movie;
+import com.github.k1mb1.cinema_java_spring.models.country.CountryEntity;
+import com.github.k1mb1.cinema_java_spring.models.genre.GenreEntity;
+import com.github.k1mb1.cinema_java_spring.models.movie.MovieEntity;
+import com.github.k1mb1.cinema_java_spring.models.movie.MovieRequestDto;
+import com.github.k1mb1.cinema_java_spring.models.movie.MovieResponseDto;
 import lombok.NonNull;
 import org.mapstruct.*;
 
@@ -13,10 +13,10 @@ import java.util.stream.Collectors;
 
 import static org.mapstruct.MappingConstants.ComponentModel.SPRING;
 
-@Mapper(componentModel = SPRING, uses = {GenreMapper.class, CountryMapper.class})
+@Mapper(componentModel = SPRING, uses = {GenreMapper.class, CountryMapper.class}, unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface MovieMapper {
 
-    MovieResponseDto toDto(Movie movie);
+    MovieResponseDto toDto(MovieEntity movieEntity);
 
     @Mapping(target = "genres", source = "genreIds")
     @Mapping(target = "countries", source = "countryIds")
@@ -24,7 +24,7 @@ public interface MovieMapper {
     @Mapping(target = "createAt", ignore = true)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "updateAt", ignore = true)
-    Movie toEntity(MovieRequestDto movieRequestDto);
+    MovieEntity toEntity(MovieRequestDto movieRequestDto);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
@@ -33,26 +33,26 @@ public interface MovieMapper {
     @Mapping(target = "watchedMovies", ignore = true)
     @Mapping(target = "genres", source = "genreIds")
     @Mapping(target = "countries", source = "countryIds")
-    void partialUpdate(MovieRequestDto movieRequestDto, @MappingTarget Movie movie);
+    void partialUpdate(MovieRequestDto movieRequestDto, @MappingTarget MovieEntity movie);
 
-    default Set<Genre> mapGenreIds(Set<Integer> genreIds) {
+    default Set<GenreEntity> mapGenreIds(Set<Integer> genreIds) {
         return genreIds.stream()
                 .map(this::mapIdToGenre)
                 .collect(Collectors.toSet());
     }
 
-    default Set<Country> mapCountryIds(Set<Integer> countryIds) {
+    default Set<CountryEntity> mapCountryIds(Set<Integer> countryIds) {
         return countryIds.stream()
                 .map(this::mapIdToCountry)
                 .collect(Collectors.toSet());
     }
 
-    default Genre mapIdToGenre(@NonNull Integer id) {
-        return Genre.builder().id(id).build();
+    default GenreEntity mapIdToGenre(@NonNull Integer id) {
+        return GenreEntity.builder().id(id).build();
     }
 
-    default Country mapIdToCountry(@NonNull Integer id) {
-        return Country.builder().id(id).build();
+    default CountryEntity mapIdToCountry(@NonNull Integer id) {
+        return CountryEntity.builder().id(id).build();
     }
 
 }

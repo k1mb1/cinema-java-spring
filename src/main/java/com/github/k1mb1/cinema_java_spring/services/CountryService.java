@@ -1,7 +1,8 @@
 package com.github.k1mb1.cinema_java_spring.services;
 
-import com.github.k1mb1.cinema_java_spring.dtos.country.CountryRequestDto;
-import com.github.k1mb1.cinema_java_spring.dtos.country.CountryResponseDto;
+import com.github.k1mb1.cinema_java_spring.models.country.CountryEntity;
+import com.github.k1mb1.cinema_java_spring.models.country.CountryRequestDto;
+import com.github.k1mb1.cinema_java_spring.models.country.CountryResponseDto;
 import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
 import com.github.k1mb1.cinema_java_spring.mappers.CountryMapper;
 import com.github.k1mb1.cinema_java_spring.repositories.CountryRepository;
@@ -9,6 +10,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +28,9 @@ public class CountryService {
     CountryRepository countryRepository;
     CountryMapper countryMapper;
 
-    public CountryResponseDto createCountry(@NonNull CountryRequestDto countryRequestDto) {
+    public CountryResponseDto createCountry(
+            @NonNull CountryRequestDto countryRequestDto
+    ) {
         return countryMapper.toDto(
                 countryRepository.save(countryMapper.toEntity(countryRequestDto))
         );
@@ -33,22 +38,21 @@ public class CountryService {
 
     @Transactional(readOnly = true)
     public CountryResponseDto getCountryById(@NonNull Integer id) {
-        return countryMapper.toDto(
-                countryRepository.findById(id)
-                        .orElseThrow(() -> new NotFoundException(COUNTRY_NOT_FOUND.formatted(id)))
-        );
+        return countryMapper.toDto(getCountryEntityById(id));
     }
 
     @Transactional(readOnly = true)
-    public List<CountryResponseDto> getAllCountries() {
-        return countryRepository.findAll().stream()
-                .map(countryMapper::toDto)
-                .toList();
+    public Page<CountryResponseDto> getAllCountries(
+            @NonNull Pageable pageable
+    ) {
+        return countryRepository.findAll(pageable).map(countryMapper::toDto);
     }
 
-    public CountryResponseDto updateCountry(@NonNull Integer id, @NonNull CountryRequestDto countryRequestDto) {
-        val existingCountry = countryRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(COUNTRY_NOT_FOUND.formatted(id)));
+    public CountryResponseDto updateCountry(
+            @NonNull Integer id,
+            @NonNull CountryRequestDto countryRequestDto
+    ) {
+        val existingCountry = getCountryEntityById(id);
 
         countryMapper.partialUpdate(countryRequestDto, existingCountry);
 
@@ -60,5 +64,16 @@ public class CountryService {
             throw new NotFoundException(COUNTRY_NOT_FOUND.formatted(id));
         }
         countryRepository.deleteById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public CountryEntity getCountryEntityById(@NonNull Integer id) {
+        return countryRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(COUNTRY_NOT_FOUND.formatted(id)));
+    }
+
+    @Transactional(readOnly = true)
+    public List<CountryEntity> getCountriesByIds(@NonNull Iterable<Integer> ids) {
+        return countryRepository.findAllById(ids);
     }
 }

@@ -1,7 +1,7 @@
 package com.github.k1mb1.cinema_java_spring.services;
 
-import com.github.k1mb1.cinema_java_spring.dtos.watchedmovie.WatchedMovieRequestDto;
-import com.github.k1mb1.cinema_java_spring.dtos.watchedmovie.WatchedMovieResponseDto;
+import com.github.k1mb1.cinema_java_spring.models.watchedmovie.WatchedMovieRequestDto;
+import com.github.k1mb1.cinema_java_spring.models.watchedmovie.WatchedMovieResponseDto;
 import com.github.k1mb1.cinema_java_spring.errors.NotFoundException;
 import com.github.k1mb1.cinema_java_spring.mappers.WatchedMovieMapper;
 import com.github.k1mb1.cinema_java_spring.repositories.MovieRepository;

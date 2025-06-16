@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset author:00009_create_countries_and_movie_countries
+--changeset k1mb1:00009_create_countries_and_movie_countries
 CREATE TABLE countries
 (
     id         SERIAL PRIMARY KEY,

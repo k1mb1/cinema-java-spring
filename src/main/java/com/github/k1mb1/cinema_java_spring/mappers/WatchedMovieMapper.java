@@ -1,21 +1,19 @@
 package com.github.k1mb1.cinema_java_spring.mappers;
 
-import com.github.k1mb1.cinema_java_spring.dtos.watchedmovie.WatchedMovieRequestDto;
-import com.github.k1mb1.cinema_java_spring.dtos.watchedmovie.WatchedMovieResponseDto;
-import com.github.k1mb1.cinema_java_spring.entities.Movie;
-import com.github.k1mb1.cinema_java_spring.entities.User;
-import com.github.k1mb1.cinema_java_spring.entities.WatchedMovie;
+import com.github.k1mb1.cinema_java_spring.models.movie.MovieEntity;
+import com.github.k1mb1.cinema_java_spring.models.user.UserEntity;
+import com.github.k1mb1.cinema_java_spring.models.watchedmovie.WatchedMovieEntity;
+import com.github.k1mb1.cinema_java_spring.models.watchedmovie.WatchedMovieRequestDto;
+import com.github.k1mb1.cinema_java_spring.models.watchedmovie.WatchedMovieResponseDto;
 import lombok.NonNull;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Named;
+import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING)
 public interface WatchedMovieMapper {
 
     @Mapping(source = "user.id", target = "userId")
     @Mapping(source = "movie.id", target = "movieId")
-    WatchedMovieResponseDto toDto(WatchedMovie watchedMovie);
+    WatchedMovieResponseDto toDto(WatchedMovieEntity watchedMovie);
 
     @Mapping(target = "user", source = "userId", qualifiedByName = "mapIdToUser")
     @Mapping(target = "movie", source = "movieId", qualifiedByName = "mapIdToMovie")
@@ -23,15 +21,15 @@ public interface WatchedMovieMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "updateAt", ignore = true)
     @Mapping(target = "watchedAt", ignore = true)
-    WatchedMovie toEntity(WatchedMovieRequestDto watchedMovieRequestDto);
+    WatchedMovieEntity toEntity(WatchedMovieRequestDto watchedMovieRequestDto);
 
     @Named("mapIdToUser")
-    default User mapIdToUser(@NonNull Integer id) {
-        return User.builder().id(id).build();
+    default UserEntity mapIdToUser(@NonNull Integer id) {
+        return UserEntity.builder().id(id).build();
     }
 
     @Named("mapIdToMovie")
-    default Movie mapIdToMovie(@NonNull Integer id) {
-        return Movie.builder().id(id).build();
+    default MovieEntity mapIdToMovie(@NonNull Integer id) {
+        return MovieEntity.builder().id(id).build();
     }
 }

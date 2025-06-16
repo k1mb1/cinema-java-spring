@@ -1,20 +1,22 @@
 package com.github.k1mb1.cinema_java_spring.controllers;
 
-import com.github.k1mb1.cinema_java_spring.dtos.movie.MovieRequestDto;
-import com.github.k1mb1.cinema_java_spring.dtos.movie.MovieResponseDto;
+import com.github.k1mb1.cinema_java_spring.models.movie.MovieFilter;
+import com.github.k1mb1.cinema_java_spring.models.movie.MovieRequestDto;
+import com.github.k1mb1.cinema_java_spring.models.movie.MovieResponseDto;
 import com.github.k1mb1.cinema_java_spring.services.MovieService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 import static org.springframework.http.HttpStatus.*;
 
 @RestController
-@RequestMapping("/api/movies")
+@RequestMapping("/api/v1/movies")
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true)
 public class MovieController {
@@ -32,8 +34,11 @@ public class MovieController {
     }
 
     @GetMapping
-    public ResponseEntity<List<MovieResponseDto>> getAllMovies() {
-        return ResponseEntity.status(OK).body(movieService.getAllMovies());
+    public ResponseEntity<Page<MovieResponseDto>> getAllMovies(
+            @ParameterObject @ModelAttribute MovieFilter filter,
+            @ParameterObject Pageable pageable
+    ) {
+        return ResponseEntity.status(OK).body(movieService.getAllMovies(filter, pageable));
     }
 
     @PutMapping("/{id}")

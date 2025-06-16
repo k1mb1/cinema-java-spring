@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset author:00003_create_watched_movies
+--changeset k1mb1:00003_create_watched_movies
 CREATE TABLE watched_movies
 (
     user_id    INT REFERENCES users (id) ON DELETE CASCADE,

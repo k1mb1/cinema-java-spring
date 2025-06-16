@@ -1,12 +1,14 @@
-package com.github.k1mb1.cinema_java_spring.entities;
+package com.github.k1mb1.cinema_java_spring.models.movie;
 
+import com.github.k1mb1.cinema_java_spring.models.BaseEntity;
+import com.github.k1mb1.cinema_java_spring.models.country.CountryEntity;
+import com.github.k1mb1.cinema_java_spring.models.genre.GenreEntity;
+import com.github.k1mb1.cinema_java_spring.models.watchedmovie.WatchedMovieEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,14 +17,10 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 @Table(name = "movies")
-public class Movie {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Integer id;
-
+public class MovieEntity extends BaseEntity {
+    @Column(name = "title", nullable = false, unique = true)
     String title;
 
     String description;
@@ -43,33 +41,25 @@ public class Movie {
     @Column(name = "duration_minutes")
     Integer durationMinutes;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "movie_genres",
             joinColumns = @JoinColumn(name = "movie_id"),
             inverseJoinColumns = @JoinColumn(name = "genre_id")
     )
     @Builder.Default
-    Set<Genre> genres = new HashSet<>();
+    Set<GenreEntity> genres = new HashSet<>();
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "movie_countries",
             joinColumns = @JoinColumn(name = "movie_id"),
             inverseJoinColumns = @JoinColumn(name = "country_id")
     )
     @Builder.Default
-    Set<Country> countries = new HashSet<>();
+    Set<CountryEntity> countries = new HashSet<>();
 
-    @OneToMany(mappedBy = "movie")
+    @OneToMany(mappedBy = "movie", fetch = FetchType.LAZY)
     @Builder.Default
-    Set<WatchedMovie> watchedMovies = new HashSet<>();
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    LocalDateTime createAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    LocalDateTime updateAt;
+    Set<WatchedMovieEntity> watchedMovies = new HashSet<>();
 }

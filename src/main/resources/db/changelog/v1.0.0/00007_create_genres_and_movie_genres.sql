@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset author:00007_create_genres_and_movie_genres
+--changeset k1mb1:00007_create_genres_and_movie_genres
 CREATE TABLE genres
 (
     id         SERIAL PRIMARY KEY,

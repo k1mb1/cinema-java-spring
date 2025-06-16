@@ -1,4 +1,4 @@
-package com.github.k1mb1.cinema_java_spring.dtos.watchedmovie;
+package com.github.k1mb1.cinema_java_spring.models.watchedmovie;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

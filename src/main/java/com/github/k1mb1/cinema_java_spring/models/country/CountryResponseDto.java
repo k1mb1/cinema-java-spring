@@ -1,4 +1,4 @@
-package com.github.k1mb1.cinema_java_spring.dtos.watchedmovie;
+package com.github.k1mb1.cinema_java_spring.models.country;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,12 +11,10 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class WatchedMovieResponseDto {
+public class CountryResponseDto {
 
     Integer id;
-    Integer userId;
-    Integer movieId;
-    LocalDateTime watchedAt;
+    String name;
     LocalDateTime createAt;
     LocalDateTime updateAt;
 }

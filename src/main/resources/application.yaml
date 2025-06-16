@@ -9,3 +9,5 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+    show-sql: true
+    open-in-view: false # Disable Open Session in View to prevent lazy loading in controller layer

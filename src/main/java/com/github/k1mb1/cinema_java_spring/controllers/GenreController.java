@@ -1,22 +1,24 @@
 package com.github.k1mb1.cinema_java_spring.controllers;
 
-import com.github.k1mb1.cinema_java_spring.dtos.genre.GenreRequestDto;
-import com.github.k1mb1.cinema_java_spring.dtos.genre.GenreResponseDto;
+import com.github.k1mb1.cinema_java_spring.models.genre.GenreRequestDto;
+import com.github.k1mb1.cinema_java_spring.models.genre.GenreResponseDto;
 import com.github.k1mb1.cinema_java_spring.services.GenreService;
+import jakarta.validation.Valid;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
 
 @RestController
-@RequestMapping("/api/genres")
+@RequestMapping("/api/v1/genres")
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true)
 public class GenreController {
@@ -24,7 +26,9 @@ public class GenreController {
     GenreService genreService;
 
     @PostMapping
-    public ResponseEntity<GenreResponseDto> createGenre(@NonNull @RequestBody GenreRequestDto genreRequestDto) {
+    public ResponseEntity<GenreResponseDto> createGenre(
+            @Valid @NonNull @RequestBody GenreRequestDto genreRequestDto
+    ) {
         return ResponseEntity.status(CREATED).body(genreService.createGenre(genreRequestDto));
     }
 
@@ -34,14 +38,16 @@ public class GenreController {
     }
 
     @GetMapping
-    public ResponseEntity<List<GenreResponseDto>> getAllGenres() {
-        return ResponseEntity.status(OK).body(genreService.getAllGenres());
+    public ResponseEntity<Page<GenreResponseDto>> getAllGenres(
+            @NonNull @ParameterObject Pageable pageable
+    ) {
+        return ResponseEntity.status(OK).body(genreService.getAllGenres(pageable));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<GenreResponseDto> updateGenre(
             @NonNull @PathVariable Integer id,
-            @NonNull @RequestBody GenreRequestDto genreRequestDto
+            @Valid @NonNull @RequestBody GenreRequestDto genreRequestDto
     ) {
         return ResponseEntity.status(OK).body(genreService.updateGenre(id, genreRequestDto));
     }

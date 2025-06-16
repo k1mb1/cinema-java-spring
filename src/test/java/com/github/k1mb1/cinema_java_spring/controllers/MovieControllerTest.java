@@ -1,8 +1,8 @@
 package com.github.k1mb1.cinema_java_spring.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.k1mb1.cinema_java_spring.dtos.movie.MovieRequestDto;
-import com.github.k1mb1.cinema_java_spring.dtos.movie.MovieResponseDto;
+import com.github.k1mb1.cinema_java_spring.models.movie.MovieRequestDto;
+import com.github.k1mb1.cinema_java_spring.models.movie.MovieResponseDto;
 import com.github.k1mb1.cinema_java_spring.utils.IntegrationTest;
 import com.github.k1mb1.cinema_java_spring.utils.IntegrationTestUtils;
 import lombok.val;
@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @IntegrationTest
 public class MovieControllerTest {
 
-    final String baseUrl = "/api/movies";
+    final String baseUrl = "/api/v1/movies";
     @Autowired
     MockMvc mockMvc;
     @Autowired
@@ -151,12 +151,12 @@ public class MovieControllerTest {
         utils.expectError(delete(baseUrl + "/99999"), HttpStatus.NOT_FOUND);
     }
 
-        MovieRequestDto createSampleMovieRequest(String title, String description) {
+    MovieRequestDto createSampleMovieRequest(String title, String description) {
         return new MovieRequestDto()
                 .setTitle(title)
                 .setDescription(description)
                 .setReleaseDate(LocalDate.of(2023, 1, 1))
                 .setGenreIds(Set.of(1))
                 .setCountryIds(Set.of(1));
-        }
+    }
 }
